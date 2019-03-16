@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">ex0</string>
+    <string name="main_text">Hello world, my name is David Ginzbourg</string>
+</resources>
