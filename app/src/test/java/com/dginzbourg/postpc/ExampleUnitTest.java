@@ -1,4 +1,4 @@
-package com.dginzbourg.postpc.ex1;
+package com.dginzbourg.postpc;
 
 import org.junit.Test;
 

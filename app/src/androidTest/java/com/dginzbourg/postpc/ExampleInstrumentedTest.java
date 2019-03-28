@@ -1,4 +1,4 @@
-package com.dginzbourg.postpc.ex1;
+package com.dginzbourg.postpc;
 
 import android.content.Context;
 import android.support.test.InstrumentationRegistry;
@@ -21,6 +21,6 @@ public class ExampleInstrumentedTest {
         // Context of the app under test.
         Context appContext = InstrumentationRegistry.getTargetContext();
 
-        assertEquals("com.dginzbourg.postpc.ex1", appContext.getPackageName());
+        assertEquals("com.dginzbourg.postpc", appContext.getPackageName());
     }
 }
