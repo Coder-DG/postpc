@@ -55,6 +55,7 @@ class MainActivity : AppCompatActivity() {
         chatMessages = chatMessagesCopy
         adapter.submitList(chatMessages)
         editText.setText("")
+        saveRecyclerView()
     }
 
     override fun onRestoreInstanceState(savedInstanceState: Bundle?) {
@@ -127,6 +128,7 @@ class MainActivity : AppCompatActivity() {
         chatMessagesCopy.removeAt(pos)
         chatMessages = chatMessagesCopy
         adapter.submitList(chatMessages)
+        saveRecyclerView()
     }
 
     override fun onResume() {
