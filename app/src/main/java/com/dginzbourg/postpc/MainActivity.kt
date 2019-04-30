@@ -8,6 +8,7 @@ import android.support.v7.widget.RecyclerView
 import android.util.Log
 import android.widget.Button
 import android.widget.EditText
+import com.google.firebase.firestore.FirebaseFirestore
 
 import java.util.ArrayList
 
@@ -15,9 +16,19 @@ import java.util.ArrayList
 class MainActivity : AppCompatActivity() {
 
 
-    internal var adapter = MessageRecyclerUtils.ChatMessageAdapter(onItemClickCallback())
-    internal var chatMessages = ArrayList<ChatMessage>()
-    internal lateinit var editText: EditText
+    private var adapter = MessageRecyclerUtils.ChatMessageAdapter(OnItemClickCallback())
+    private val messageIDs = HashSet<String>()
+    private var chatMessages = ArrayList<ChatMessage>()
+    private lateinit var editText: EditText
+    private val db = FirebaseFirestore.getInstance()
+
+    private fun getAvailableMessageID(): String {
+        var id: String
+        do {
+            id = Utils.generateMessageId()
+        } while (id !in messageIDs)
+        return id
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -26,14 +37,7 @@ class MainActivity : AppCompatActivity() {
         editText = findViewById(R.id.edit_text)
         editText.setText(editTextString)
         val button = findViewById<Button>(R.id.button)
-        button.setOnClickListener {
-            try {
-                handleSend()
-            } catch (e: SendException) {
-                Utils.showToast(
-                        this@MainActivity, e.message!!, R.integer.toast_duration)
-            }
-        }
+        button.setOnClickListener { handleSend() }
 
         val recyclerView = findViewById<RecyclerView>(R.id.chat_messages_recycler)
         recyclerView.layoutManager = LinearLayoutManager(
@@ -43,14 +47,18 @@ class MainActivity : AppCompatActivity() {
         recyclerView.adapter = adapter
     }
 
-    @Throws(SendException::class)
     private fun handleSend() {
         val text = editText.text.toString()
         if (text.isEmpty()) {
-            throw SendException(getString(R.string.empty_message_error))
+            Utils.showToast(
+                    this@MainActivity,
+                    getString(R.string.empty_message_error),
+                    R.integer.toast_duration)
         }
         val chatMessagesCopy = ArrayList(chatMessages)
-        chatMessagesCopy.add(ChatMessage(text))
+        val messageId = getAvailableMessageID()
+        chatMessagesCopy.add(ChatMessage(messageId, text))
+        messageIDs.add(messageId)
         Log.d("handleSend", "Inserted message: $text")
         chatMessages = chatMessagesCopy
         adapter.submitList(chatMessages)
@@ -59,7 +67,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onRestoreInstanceState(savedInstanceState: Bundle?) {
-        Log.d("onRestoreInstanceState", "<- Was called")
         super.onRestoreInstanceState(savedInstanceState)
         savedInstanceState?.let { restoreTextViews(savedInstanceState) }
     }
@@ -84,9 +91,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
-        Log.d("onSaveInstanceState", "<- Was called")
         super.onSaveInstanceState(outState)
-
         saveTextViews(outState)
     }
 
@@ -108,7 +113,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    inner class onItemClickCallback : MessageRecyclerUtils.ChatMessageLongClickCallBack {
+    inner class OnItemClickCallback : MessageRecyclerUtils.ChatMessageLongClickCallBack {
         override fun onLongClick(pos: Int): Boolean {
             Log.d("onLongClick", "Clicked on item $pos")
             val dialog = Utils.getAlertDialog(
@@ -124,6 +129,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun removeChatMessageAt(pos: Int) {
+        // TODO(This will be removeMessage(messageID))
         val chatMessagesCopy = ArrayList(chatMessages)
         chatMessagesCopy.removeAt(pos)
         chatMessages = chatMessagesCopy
