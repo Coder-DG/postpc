@@ -27,11 +27,11 @@ internal class MessageRecyclerUtils {
 
     internal class ChatMessageCallback : DiffUtil.ItemCallback<ChatMessage>() {
         override fun areItemsTheSame(m1: ChatMessage, m2: ChatMessage): Boolean {
-            return m1.messageId == m2.messageId
+            return m1.id == m2.id
         }
 
         override fun areContentsTheSame(m1: ChatMessage, m2: ChatMessage): Boolean {
-            return m1.message == m2.message
+            return m1.content == m2.content && m1.timestamp == m2.timestamp
         }
     }
 
@@ -52,7 +52,7 @@ internal class MessageRecyclerUtils {
 
         override fun onBindViewHolder(chatMessageHolder: ChatMessageHolder, pos: Int) {
             val chatMessage = getItem(pos)
-            chatMessageHolder.setMessage(chatMessage.message)
+            chatMessageHolder.setMessage(chatMessage.content)
         }
     }
 }

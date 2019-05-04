@@ -8,9 +8,10 @@ import android.support.v7.widget.RecyclerView
 import android.util.Log
 import android.widget.Button
 import android.widget.EditText
+import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FirebaseFirestore
-
-import java.util.ArrayList
+import java.util.*
+import kotlin.collections.HashSet
 
 
 class MainActivity : AppCompatActivity() {
@@ -20,6 +21,7 @@ class MainActivity : AppCompatActivity() {
     private val messageIDs = HashSet<String>()
     private var chatMessages = ArrayList<ChatMessage>()
     private lateinit var editText: EditText
+    private var editTextString: String? = ""
     private val db = FirebaseFirestore.getInstance()
 
     private fun getAvailableMessageID(): String {
@@ -59,11 +61,11 @@ class MainActivity : AppCompatActivity() {
         val messageId = getAvailableMessageID()
         chatMessagesCopy.add(ChatMessage(messageId, text))
         messageIDs.add(messageId)
-        Log.d("handleSend", "Inserted message: $text")
+        Log.d("handleSend", "Inserted content: $text")
         chatMessages = chatMessagesCopy
         adapter.submitList(chatMessages)
         editText.setText("")
-        saveRecyclerView()
+        saveChatMessages()
     }
 
     override fun onRestoreInstanceState(savedInstanceState: Bundle?) {
@@ -75,20 +77,6 @@ class MainActivity : AppCompatActivity() {
         editTextString = savedInstanceState.getString(EDIT_TEXT_STRING_KEY)
     }
 
-    private fun restoreRecyclerView() {
-        with(this.getSharedPreferences(
-                getString(R.string.shared_pref_chat_messages), Context.MODE_PRIVATE)) {
-            val messageCount = getInt(CHAT_MESSAGES_COUNT, 0)
-            chatMessages = ArrayList(messageCount)
-            for (i in 0 until messageCount) {
-                val message = getString(CHAT_MESSAGES_KEY_PREFIX + i, "")
-                // This shouldn't warn me, but it does, so I used this idiom
-                chatMessages.add(ChatMessage(message ?: ""))
-            }
-        }
-        Log.i("restoreRecyclerView", "Restored ${chatMessages.size} messages.")
-        adapter.submitList(chatMessages)
-    }
 
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
@@ -99,19 +87,6 @@ class MainActivity : AppCompatActivity() {
         outState.putString(EDIT_TEXT_STRING_KEY, editTextString)
     }
 
-    private fun saveRecyclerView() {
-        val messageCount = chatMessages.size
-        val sharedPref = this.getSharedPreferences(
-                getString(R.string.shared_pref_chat_messages), Context.MODE_PRIVATE)
-        with(sharedPref.edit()) {
-            putInt(CHAT_MESSAGES_COUNT, messageCount)
-            for (i in 0 until messageCount) {
-                putString(CHAT_MESSAGES_KEY_PREFIX + i, chatMessages[i].message)
-            }
-
-            apply()
-        }
-    }
 
     inner class OnItemClickCallback : MessageRecyclerUtils.ChatMessageLongClickCallBack {
         override fun onLongClick(pos: Int): Boolean {
@@ -134,24 +109,59 @@ class MainActivity : AppCompatActivity() {
         chatMessagesCopy.removeAt(pos)
         chatMessages = chatMessagesCopy
         adapter.submitList(chatMessages)
-        saveRecyclerView()
+        saveChatMessages()
     }
 
     override fun onResume() {
         super.onResume()
-        restoreRecyclerView()
+        restoreChatMessages()
     }
 
     override fun onPause() {
         super.onPause()
-        saveRecyclerView()
+        saveChatMessages()
+    }
+
+    private fun saveChatMessages() {
+        val sharedPref = this.getSharedPreferences(
+                getString(R.string.shared_pref_chat_messages), Context.MODE_PRIVATE)
+        with(sharedPref.edit()) {
+            val messageIDs = mutableSetOf(*(chatMessages.map { it.id }).toTypedArray())
+            putStringSet(CHAT_MESSAGES_IDS, messageIDs)
+            chatMessages.forEach {
+                putString(CHAT_MESSAGE_CONTENT_PREFIX + it.id, it.content)
+                        .putString(CHAT_MESSAGE_TIMESTAMP_PREFIX + it.id,
+                                it.timestamp.toDate().toString())
+            }
+            apply()
+        }
+    }
+
+    private fun restoreChatMessages() {
+        with(this.getSharedPreferences(
+                getString(R.string.shared_pref_chat_messages),
+                Context.MODE_PRIVATE)) {
+            val messageIDs = getStringSet(CHAT_MESSAGES_IDS, mutableSetOf()) ?: HashSet<String>()
+            chatMessages = ArrayList(messageIDs.size)
+            for (id in messageIDs) {
+                val content = getString(CHAT_MESSAGE_CONTENT_PREFIX + id, "")
+                val timestamp: Timestamp = Timestamp(
+                        Date(
+                                getString(CHAT_MESSAGE_TIMESTAMP_PREFIX + id,
+                                        Timestamp.now().toDate().toString())))
+                // This shouldn't warn me, but it does, so I used this idiom
+                chatMessages.add(ChatMessage(content ?: ""))
+            }
+        }
+        Log.i("restoreChatMessages", "Restored ${chatMessages.size} messages.")
+        adapter.submitList(chatMessages)
     }
 
     companion object {
 
-        internal val CHAT_MESSAGES_COUNT = "message_count_"
-        internal val EDIT_TEXT_STRING_KEY = "editText"
-        internal val CHAT_MESSAGES_KEY_PREFIX = "message_"
-        internal var editTextString: String? = ""
+        internal const val CHAT_MESSAGES_IDS = "chat_message_ids"
+        internal const val EDIT_TEXT_STRING_KEY = "editText"
+        internal const val CHAT_MESSAGE_CONTENT_PREFIX = "message_content_"
+        internal const val CHAT_MESSAGE_TIMESTAMP_PREFIX = "message_timestamp_"
     }
 }

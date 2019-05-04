@@ -1,3 +1,5 @@
 package com.dginzbourg.postpc
 
-class ChatMessage(val messageId: String, val message: String)
+import com.google.firebase.Timestamp
+
+class ChatMessage(val id: String, val content: String, val timestamp: Timestamp)
