@@ -1,6 +1,7 @@
 package com.dginzbourg.postpc
 
 import android.content.Context
+import android.content.SharedPreferences
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.support.v7.widget.LinearLayoutManager
@@ -23,6 +24,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var editText: EditText
     private var editTextString: String? = ""
     private val db = FirebaseFirestore.getInstance()
+    private lateinit var sharedPref: SharedPreferences
 
     private fun getAvailableMessageID(): String {
         var id: String
@@ -34,6 +36,9 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        sharedPref = this.getSharedPreferences(
+                getString(R.string.shared_pref_chat_messages),
+                Context.MODE_PRIVATE)
         setContentView(R.layout.activity_main)
 
         editText = findViewById(R.id.edit_text)
@@ -57,15 +62,8 @@ class MainActivity : AppCompatActivity() {
                     getString(R.string.empty_message_error),
                     R.integer.toast_duration)
         }
-        val chatMessagesCopy = ArrayList(chatMessages)
-        val messageId = getAvailableMessageID()
-        chatMessagesCopy.add(ChatMessage(messageId, text))
-        messageIDs.add(messageId)
-        Log.d("handleSend", "Inserted content: $text")
-        chatMessages = chatMessagesCopy
-        adapter.submitList(chatMessages)
+        addChatMessage(text)
         editText.setText("")
-        saveChatMessages()
     }
 
     override fun onRestoreInstanceState(savedInstanceState: Bundle?) {
@@ -104,12 +102,32 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun removeChatMessageAt(pos: Int) {
-        // TODO(This will be removeMessage(messageID))
         val chatMessagesCopy = ArrayList(chatMessages)
-        chatMessagesCopy.removeAt(pos)
+        val chatMessage = chatMessagesCopy.removeAt(pos)
+        messageIDs.remove(chatMessage.id)
+        removeMessageFromDB(chatMessage)
         chatMessages = chatMessagesCopy
         adapter.submitList(chatMessages)
-        saveChatMessages()
+    }
+
+    private fun removeMessageFromDB(chatMessage: ChatMessage) {
+        with(sharedPref.edit()) {
+            remove(CHAT_MESSAGE_CONTENT_PREFIX + chatMessage.id)
+            remove(CHAT_MESSAGE_TIMESTAMP_PREFIX + chatMessage.id)
+            apply()
+        }
+    }
+
+    fun addChatMessage(content: String) {
+        val chatMessagesCopy = ArrayList(chatMessages)
+        val messageId = getAvailableMessageID()
+        val chatMessage = ChatMessage(messageId, content, Timestamp(Date()))
+        chatMessagesCopy.add(chatMessage)
+        messageIDs.add(messageId)
+        saveChatMessageToDB(chatMessage)
+        Log.d("addChatMessage", "Inserted content: $content")
+        chatMessages = chatMessagesCopy
+        adapter.submitList(chatMessages)
     }
 
     override fun onResume() {
@@ -119,39 +137,39 @@ class MainActivity : AppCompatActivity() {
 
     override fun onPause() {
         super.onPause()
-        saveChatMessages()
+        saveMessagesIDs()
     }
 
-    private fun saveChatMessages() {
-        val sharedPref = this.getSharedPreferences(
-                getString(R.string.shared_pref_chat_messages), Context.MODE_PRIVATE)
+    private fun saveMessagesIDs() {
         with(sharedPref.edit()) {
-            val messageIDs = mutableSetOf(*(chatMessages.map { it.id }).toTypedArray())
             putStringSet(CHAT_MESSAGES_IDS, messageIDs)
-            chatMessages.forEach {
-                putString(CHAT_MESSAGE_CONTENT_PREFIX + it.id, it.content)
-                        .putString(CHAT_MESSAGE_TIMESTAMP_PREFIX + it.id,
-                                it.timestamp.toDate().toString())
-            }
+            apply()
+        }
+    }
+
+    private fun saveChatMessageToDB(chatMessage: ChatMessage) {
+        with(sharedPref.edit()) {
+            putString(CHAT_MESSAGE_CONTENT_PREFIX + chatMessage.id, chatMessage.content)
+            putLong(CHAT_MESSAGE_TIMESTAMP_PREFIX + chatMessage.id,
+                    chatMessage.timestamp.toDate().time)
             apply()
         }
     }
 
     private fun restoreChatMessages() {
-        with(this.getSharedPreferences(
-                getString(R.string.shared_pref_chat_messages),
-                Context.MODE_PRIVATE)) {
-            val messageIDs = getStringSet(CHAT_MESSAGES_IDS, mutableSetOf()) ?: HashSet<String>()
-            chatMessages = ArrayList(messageIDs.size)
-            for (id in messageIDs) {
-                val content = getString(CHAT_MESSAGE_CONTENT_PREFIX + id, "")
-                val timestamp: Timestamp = Timestamp(
-                        Date(
-                                getString(CHAT_MESSAGE_TIMESTAMP_PREFIX + id,
-                                        Timestamp.now().toDate().toString())))
-                // This shouldn't warn me, but it does, so I used this idiom
-                chatMessages.add(ChatMessage(content ?: ""))
-            }
+        val messageIDs = sharedPref.getStringSet(CHAT_MESSAGES_IDS, mutableSetOf())
+                ?: HashSet<String>()
+        chatMessages = ArrayList(messageIDs.size)
+        for (id in messageIDs) {
+            val content = sharedPref.getString(CHAT_MESSAGE_CONTENT_PREFIX + id, null)
+            val timestampLong = sharedPref.getLong(CHAT_MESSAGE_TIMESTAMP_PREFIX + id, -1)
+
+            if (content != null && timestampLong != -1L)
+                continue
+
+            val timestamp = Timestamp(Date(timestampLong))
+            // This shouldn't warn me, but it does, so I used this idiom
+            chatMessages.add(ChatMessage(id, content ?: "", timestamp))
         }
         Log.i("restoreChatMessages", "Restored ${chatMessages.size} messages.")
         adapter.submitList(chatMessages)
@@ -159,8 +177,9 @@ class MainActivity : AppCompatActivity() {
 
     companion object {
 
-        internal const val CHAT_MESSAGES_IDS = "chat_message_ids"
         internal const val EDIT_TEXT_STRING_KEY = "editText"
+        // Chat Messages constants
+        internal const val CHAT_MESSAGES_IDS = "chat_message_ids"
         internal const val CHAT_MESSAGE_CONTENT_PREFIX = "message_content_"
         internal const val CHAT_MESSAGE_TIMESTAMP_PREFIX = "message_timestamp_"
     }
