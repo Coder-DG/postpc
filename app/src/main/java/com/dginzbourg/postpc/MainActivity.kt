@@ -19,7 +19,7 @@ class MainActivity : AppCompatActivity() {
 
 
     private var adapter = MessageRecyclerUtils.ChatMessageAdapter(OnItemClickCallback())
-    private val messageIDs = HashSet<String>()
+    private var messageIDs: MutableSet<String> = HashSet()
     private var chatMessages = ArrayList<ChatMessage>()
     private lateinit var editText: EditText
     private var editTextString: String? = ""
@@ -30,7 +30,7 @@ class MainActivity : AppCompatActivity() {
         var id: String
         do {
             id = Utils.generateMessageId()
-        } while (id !in messageIDs)
+        } while (id in messageIDs)
         return id
     }
 
@@ -61,6 +61,7 @@ class MainActivity : AppCompatActivity() {
                     this@MainActivity,
                     getString(R.string.empty_message_error),
                     R.integer.toast_duration)
+            return
         }
         addChatMessage(text)
         editText.setText("")
@@ -118,7 +119,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    fun addChatMessage(content: String) {
+    private fun addChatMessage(content: String) {
         val chatMessagesCopy = ArrayList(chatMessages)
         val messageId = getAvailableMessageID()
         val chatMessage = ChatMessage(messageId, content, Timestamp(Date()))
@@ -157,20 +158,21 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun restoreChatMessages() {
-        val messageIDs = sharedPref.getStringSet(CHAT_MESSAGES_IDS, mutableSetOf())
+        messageIDs = sharedPref.getStringSet(CHAT_MESSAGES_IDS, mutableSetOf())
                 ?: HashSet<String>()
         chatMessages = ArrayList(messageIDs.size)
         for (id in messageIDs) {
             val content = sharedPref.getString(CHAT_MESSAGE_CONTENT_PREFIX + id, null)
             val timestampLong = sharedPref.getLong(CHAT_MESSAGE_TIMESTAMP_PREFIX + id, -1)
 
-            if (content != null && timestampLong != -1L)
+            if (content != null && timestampLong == -1L)
                 continue
 
             val timestamp = Timestamp(Date(timestampLong))
             // This shouldn't warn me, but it does, so I used this idiom
             chatMessages.add(ChatMessage(id, content ?: "", timestamp))
         }
+        chatMessages.sortBy { it.timestamp }
         Log.i("restoreChatMessages", "Restored ${chatMessages.size} messages.")
         adapter.submitList(chatMessages)
     }

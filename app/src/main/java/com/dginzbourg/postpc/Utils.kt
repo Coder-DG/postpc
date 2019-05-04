@@ -33,7 +33,7 @@ internal object Utils {
     fun generateMessageId(): String {
         var messageId = ""
         for (i in 0..30) {
-            messageId += chars[Random.nextInt()]
+            messageId += chars[Random.nextInt(0, chars.length)]
         }
         return messageId
     }
