@@ -4,8 +4,10 @@ import android.app.Activity
 import android.app.AlertDialog
 import android.content.Context
 import android.widget.Toast
+import kotlin.random.Random
 
 internal object Utils {
+    private const val chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
     fun showToast(context: Context, message: String, duration: Int) {
         val toast = Toast.makeText(context, message, duration)
         toast.show()
@@ -26,5 +28,13 @@ internal object Utils {
                 .setPositiveButton(posButtonText) { _, _ -> posFunction() }
                 .setNegativeButton(negButtonText) { _, _ -> negFunction() }
         return builder.create()
+    }
+
+    fun generateMessageId(): String {
+        var messageId = ""
+        for (i in 0..30) {
+            messageId += chars[Random.nextInt(0, chars.length)]
+        }
+        return messageId
     }
 }
