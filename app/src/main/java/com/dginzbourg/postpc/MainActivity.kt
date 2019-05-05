@@ -12,6 +12,7 @@ import android.widget.EditText
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FirebaseFirestore
 import java.util.*
+import kotlin.collections.ArrayList
 import kotlin.collections.HashSet
 
 
@@ -149,6 +150,11 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun saveChatMessageToDB(chatMessage: ChatMessage) {
+        saveChatMessageToLocalDB(chatMessage)
+        saveChatMessageToRemoteDB(chatMessage)
+    }
+
+    private fun saveChatMessageToLocalDB(chatMessage: ChatMessage) {
         with(sharedPref.edit()) {
             putString(CHAT_MESSAGE_CONTENT_PREFIX + chatMessage.id, chatMessage.content)
             putLong(CHAT_MESSAGE_TIMESTAMP_PREFIX + chatMessage.id,
@@ -157,10 +163,45 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun saveChatMessageToRemoteDB(chatMessage: ChatMessage) {
+        db.collection(CHAT_MESSAGE_FIREBASE_COLLECTION)
+                .add(chatMessage)
+                .addOnSuccessListener { df ->
+                    Log.d("firebase", "DocumentSnapshot added with ID: ${df.id}, and " +
+                            "ChatMessage ID: ${chatMessage.id}")
+                }
+                .addOnFailureListener { e ->
+                    Log.w("firebase", "Error adding document", e)
+                }
+    }
+
+
     private fun restoreChatMessages() {
-        messageIDs = sharedPref.getStringSet(CHAT_MESSAGES_IDS, mutableSetOf())
-                ?: HashSet<String>()
-        chatMessages = ArrayList(messageIDs.size)
+        db.collection(CHAT_MESSAGE_FIREBASE_COLLECTION)
+                .get()
+                .addOnSuccessListener { result ->
+                    Log.d("firebase", "Restored ${result.size()} messages from Firebase.")
+                    chatMessages = ArrayList(result.toObjects(ChatMessage::class.java))
+                    chatMessages.forEach {
+                        messageIDs.add(it.id)
+                        saveChatMessageToLocalDB(it)
+                    }
+                    submitNewChatMessagesArray()
+                }
+                .addOnFailureListener { exception ->
+                    Log.w("firebase", "Error getting documents.", exception)
+                    Thread {
+                        chatMessages = restoreChatMessagesLocalDB()
+                        submitNewChatMessagesArray()
+                    }.start()
+                }
+    }
+
+    private fun submitNewChatMessagesArray() = runOnUiThread { adapter.submitList(chatMessages) }
+
+    private fun restoreChatMessagesLocalDB(): ArrayList<ChatMessage> {
+        messageIDs = sharedPref.getStringSet(CHAT_MESSAGES_IDS, mutableSetOf()) ?: HashSet()
+        val chatMessagesTmp = ArrayList<ChatMessage>(messageIDs.size)
         for (id in messageIDs) {
             val content = sharedPref.getString(CHAT_MESSAGE_CONTENT_PREFIX + id, null)
             val timestampLong = sharedPref.getLong(CHAT_MESSAGE_TIMESTAMP_PREFIX + id, -1)
@@ -170,11 +211,11 @@ class MainActivity : AppCompatActivity() {
 
             val timestamp = Timestamp(Date(timestampLong))
             // This shouldn't warn me, but it does, so I used this idiom
-            chatMessages.add(ChatMessage(id, content ?: "", timestamp))
+            chatMessagesTmp.add(ChatMessage(id, content ?: "", timestamp))
         }
-        chatMessages.sortBy { it.timestamp }
-        Log.i("restoreChatMessages", "Restored ${chatMessages.size} messages.")
-        adapter.submitList(chatMessages)
+        chatMessagesTmp.sortBy { it.timestamp }
+        Log.i("restoreChatMessages", "Restored ${chatMessagesTmp.size} messages.")
+        return chatMessagesTmp
     }
 
     companion object {
@@ -184,5 +225,6 @@ class MainActivity : AppCompatActivity() {
         internal const val CHAT_MESSAGES_IDS = "chat_message_ids"
         internal const val CHAT_MESSAGE_CONTENT_PREFIX = "message_content_"
         internal const val CHAT_MESSAGE_TIMESTAMP_PREFIX = "message_timestamp_"
+        internal const val CHAT_MESSAGE_FIREBASE_COLLECTION = "chat_messages"
     }
 }
