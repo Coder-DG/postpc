@@ -165,10 +165,10 @@ class MainActivity : AppCompatActivity() {
 
     private fun saveChatMessageToRemoteDB(chatMessage: ChatMessage) {
         db.collection(CHAT_MESSAGE_FIREBASE_COLLECTION)
-                .add(chatMessage)
+                .document(chatMessage.id)
+                .set(chatMessage)
                 .addOnSuccessListener { df ->
-                    Log.d("firebase", "DocumentSnapshot added with ID: ${df.id}, and " +
-                            "ChatMessage ID: ${chatMessage.id}")
+                    Log.d("firebase", "DocumentSnapshot added with ID: ${chatMessage.id}")
                 }
                 .addOnFailureListener { e ->
                     Log.w("firebase", "Error adding document", e)
