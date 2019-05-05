@@ -140,7 +140,7 @@ class MainActivity : AppCompatActivity() {
         val messageId = getAvailableMessageID()
         val chatMessage = ChatMessage(messageId, content, Timestamp(Date()))
         chatMessagesCopy.add(chatMessage)
-        messageIDs.add(messageId)
+        messageIDs.add(chatMessage.id)
         saveChatMessageToDB(chatMessage)
         Log.d("addChatMessage", "Inserted content: $content")
         chatMessages = chatMessagesCopy
