@@ -197,6 +197,7 @@ class MainActivity : AppCompatActivity() {
                 .addOnSuccessListener { result ->
                     Log.d("firebase", "Restored ${result.size()} messages from Firebase.")
                     chatMessages = ArrayList(result.toObjects(ChatMessage::class.java))
+                    chatMessages.sortBy { it.timestamp }
                     messageIDs = HashSet()
                     chatMessages.forEach {
                         messageIDs.add(it.id)
