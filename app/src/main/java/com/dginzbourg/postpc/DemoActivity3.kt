@@ -17,17 +17,18 @@ class DemoActivity3 : AppCompatActivity() {
         findViewById<EditText>(R.id.digits_edit_text).addTextChangedListener(
                 object : TextWatcher {
                     override fun afterTextChanged(s: Editable?) {
-                        if (s?.length == 5) {
-                            val intent = Intent(this@DemoActivity3, DemoActivity1::class.java)
-                            intent.putExtra("result", s.toString())
-                            setResult(Activity.RESULT_OK, intent)
-                        }
                     }
 
                     override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
                     }
 
                     override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                        if (s?.length == 5) {
+                            val intent = Intent(this@DemoActivity3, DemoActivity1::class.java)
+                            intent.putExtra("result", s.toString())
+                            setResult(Activity.RESULT_OK, intent)
+                            finish()
+                        }
                     }
                 })
     }
