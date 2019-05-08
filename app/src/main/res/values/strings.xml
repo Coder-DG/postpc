@@ -1,5 +1,6 @@
 <resources>
-    <string name="app_name">PostChat</string>
+    <!--<string name="app_name">PostChat</string>-->
+    <string name="app_name">demo_v0</string>
     <string name="hint">Write something…</string>
     <string name="send_button">Send</string>
     <string name="empty_message_error">Cannot send an empty message</string>
