@@ -23,8 +23,16 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".DemoActivity3" />
-        <activity android:name=".DemoActivity2" />
+        <activity android:name=".DemoActivity3">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".DemoActivity1" />
+        </activity>
+        <activity android:name=".DemoActivity2">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".DemoActivity1" />
+        </activity>
     </application>
 
 </manifest>
