@@ -38,3 +38,8 @@ internal object Utils {
         return messageId
     }
 }
+
+internal const val FIREBASE_CHAT_MESSAGES = "chat_messages"
+internal const val FIREBASE_DEFAULTS = "defaults"
+internal const val FIREBASE_DEFAULTS_USERNAME_DOC_ID = "username"
+internal const val FIREBASE_DEFAULTS_USERNAME_NAME_KEY = "name"

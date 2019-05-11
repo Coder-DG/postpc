@@ -9,6 +9,7 @@ import android.support.v7.widget.RecyclerView
 import android.util.Log
 import android.widget.Button
 import android.widget.EditText
+import android.widget.TextView
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FirebaseFirestore
 import java.util.*
@@ -26,6 +27,7 @@ class MainActivity : AppCompatActivity() {
     private var editTextString: String? = ""
     private val db = FirebaseFirestore.getInstance()
     private lateinit var sharedPref: SharedPreferences
+    private var name = ""
 
     private fun getAvailableMessageID(): String {
         var id: String
@@ -42,6 +44,7 @@ class MainActivity : AppCompatActivity() {
                 Context.MODE_PRIVATE)
         setContentView(R.layout.activity_main)
 
+        fetchUserName()
         editText = findViewById(R.id.edit_text)
         editText.setText(editTextString)
         val button = findViewById<Button>(R.id.button)
@@ -53,6 +56,25 @@ class MainActivity : AppCompatActivity() {
                 LinearLayoutManager.VERTICAL,
                 false)
         recyclerView.adapter = adapter
+    }
+
+    private fun fetchUserName() {
+        if (name.isNotEmpty()) {
+            displayUserName()
+            return
+        }
+        db.collection(FIREBASE_DEFAULTS)
+                .document(FIREBASE_DEFAULTS_USERNAME_DOC_ID)
+                .get()
+                .addOnSuccessListener {
+                    this@MainActivity.name = it[FIREBASE_DEFAULTS_USERNAME_NAME_KEY] as String
+                    displayUserName()
+                }
+    }
+
+    private fun displayUserName() = runOnUiThread {
+        val tmp = "Hello $name!"
+        findViewById<TextView>(R.id.top_right_text_view).text = tmp
     }
 
     private fun handleSend() {
@@ -126,7 +148,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun removeMessageFromRemoteDB(chatMessage: ChatMessage) {
-        db.collection(CHAT_MESSAGE_FIREBASE_COLLECTION)
+        db.collection(FIREBASE_CHAT_MESSAGES)
                 .document(chatMessage.id)
                 .delete()
                 .addOnSuccessListener {
@@ -179,7 +201,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun saveChatMessageToRemoteDB(chatMessage: ChatMessage) {
-        db.collection(CHAT_MESSAGE_FIREBASE_COLLECTION)
+        db.collection(FIREBASE_CHAT_MESSAGES)
                 .document(chatMessage.id)
                 .set(chatMessage)
                 .addOnSuccessListener { df ->
@@ -192,7 +214,7 @@ class MainActivity : AppCompatActivity() {
 
 
     private fun restoreChatMessages() {
-        db.collection(CHAT_MESSAGE_FIREBASE_COLLECTION)
+        db.collection(FIREBASE_CHAT_MESSAGES)
                 .get()
                 .addOnSuccessListener { result ->
                     Log.d("firebase", "Restored ${result.size()} messages from Firebase.")
@@ -242,6 +264,6 @@ class MainActivity : AppCompatActivity() {
         internal const val CHAT_MESSAGES_IDS = "chat_message_ids"
         internal const val CHAT_MESSAGE_CONTENT_PREFIX = "message_content_"
         internal const val CHAT_MESSAGE_TIMESTAMP_PREFIX = "message_timestamp_"
-        internal const val CHAT_MESSAGE_FIREBASE_COLLECTION = "chat_messages"
     }
 }
+
