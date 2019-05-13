@@ -50,6 +50,7 @@ class ConfigureNameActivity : AppCompatActivity() {
                     }
 
                 })
+        checkNameIfExists()
     }
 
     private fun checkNameIfExists() {
