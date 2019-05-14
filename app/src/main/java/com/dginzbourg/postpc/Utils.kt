@@ -39,6 +39,7 @@ internal object Utils {
     }
 }
 
+internal const val SINGLE_CHAT_MESSAGE = "single_chat_message"
 internal const val FIREBASE_CHAT_MESSAGES = "chat_messages"
 internal const val FIREBASE_DEFAULTS = "defaults"
 internal const val FIREBASE_DEFAULTS_USERNAME_DOC_ID = "username"

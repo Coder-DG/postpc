@@ -1,9 +1,11 @@
 package com.dginzbourg.postpc
 
 import android.content.Context
+import android.content.Intent
 import android.content.SharedPreferences
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
+import android.os.Parcelable
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.util.Log
@@ -12,6 +14,7 @@ import android.widget.EditText
 import android.widget.TextView
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FirebaseFirestore
+import java.io.Serializable
 import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.collections.HashSet
@@ -122,7 +125,13 @@ class MainActivity : AppCompatActivity() {
                     getString(R.string.alert),
                     getString(R.string.yes),
                     getString(R.string.cancel),
-                    { removeChatMessageAt(pos) })
+                    {
+                        //                        removeChatMessageAt(pos)
+                        val intent = Intent(this@MainActivity,
+                                MessageDetailActivity::class.java)
+                        intent.putExtra(SINGLE_CHAT_MESSAGE, chatMessages[pos] as Serializable)
+                        startActivity(intent)
+                    })
             dialog?.show()
             return true
         }
