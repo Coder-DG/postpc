@@ -34,7 +34,8 @@ class MessageDetailActivity : AppCompatActivity() {
                     Log.d("firebase", "Got message ${result.id}.")
                     val tmpChatMessage = result.toObject(ChatMessage::class.java)
                     if (tmpChatMessage == null) {
-                        setResult(Activity.RESULT_CANCELED)
+                        setResult(Activity.RESULT_CANCELED, intent)
+                        finish()
                     } else {
                         chatMessage = tmpChatMessage
                         deleteButton.isEnabled = true
@@ -55,6 +56,8 @@ class MessageDetailActivity : AppCompatActivity() {
                 }
         deleteButton.setOnClickListener {
             removeMessageFromDB(chatMessage)
+            setResult(Activity.RESULT_OK, intent)
+            finish()
         }
 
     }
