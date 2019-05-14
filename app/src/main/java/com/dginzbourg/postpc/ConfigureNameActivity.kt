@@ -26,6 +26,7 @@ class ConfigureNameActivity : AppCompatActivity() {
         acceptNameButton = findViewById(R.id.welcome_accept_name_button)
         acceptNameButton.setOnClickListener {
             if (name.isNotEmpty()) {
+                finish()
                 startActivity(Intent(this, MainActivity::class.java))
                 saveNameToRemoteDB()
             }

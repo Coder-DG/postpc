@@ -67,8 +67,11 @@ class MainActivity : AppCompatActivity() {
                 .document(FIREBASE_DEFAULTS_USERNAME_DOC_ID)
                 .get()
                 .addOnSuccessListener {
-                    this@MainActivity.name = it[FIREBASE_DEFAULTS_USERNAME_NAME_KEY] as String
-                    displayUserName()
+                    val tmp = it[FIREBASE_DEFAULTS_USERNAME_NAME_KEY] as String?
+                    if (tmp?.isNotEmpty() == true) {
+                        this@MainActivity.name = tmp
+                        displayUserName()
+                    }
                 }
     }
 
