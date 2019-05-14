@@ -58,9 +58,9 @@ class ConfigureNameActivity : AppCompatActivity() {
                 .document(FIREBASE_DEFAULTS_USERNAME_DOC_ID)
                 .get()
                 .addOnSuccessListener {
-                    if ((it[FIREBASE_DEFAULTS_USERNAME_NAME_KEY] as String).isNotEmpty()) {
-                        startActivity(Intent(this, MainActivity::class.java))
+                    if ((it[FIREBASE_DEFAULTS_USERNAME_NAME_KEY] as String?)?.isNotEmpty() == true) {
                         finish()
+                        startActivity(Intent(this, MainActivity::class.java))
                     }
                 }
     }
