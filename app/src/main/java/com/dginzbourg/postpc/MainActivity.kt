@@ -141,28 +141,8 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun removeMessageFromDB(chatMessage: ChatMessage) {
-        removeMessageFromLocalDB(chatMessage)
-        removeMessageFromRemoteDB(chatMessage)
-    }
 
-    private fun removeMessageFromLocalDB(chatMessage: ChatMessage) {
-        with(sharedPref.edit()) {
-            remove(CHAT_MESSAGE_CONTENT_PREFIX + chatMessage.id)
-            remove(CHAT_MESSAGE_TIMESTAMP_PREFIX + chatMessage.id)
-            apply()
-        }
-    }
 
-    private fun removeMessageFromRemoteDB(chatMessage: ChatMessage) {
-        db.collection(FIREBASE_CHAT_MESSAGES)
-                .document(chatMessage.id)
-                .delete()
-                .addOnSuccessListener {
-                    Log.d("firebase", "Successfully deleted chat message " +
-                            "with ID: ${chatMessage.id}")
-                }
-    }
 
     private fun addChatMessage(content: String) {
         val chatMessagesCopy = ArrayList(chatMessages)
