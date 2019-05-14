@@ -46,7 +46,7 @@ class MessageDetailActivity : AppCompatActivity() {
     }
 
     private fun displayMessageDetails(chatMessage: ChatMessage) = runOnUiThread {
-        val text = "Sent on: ${chatMessage.timestamp}\nFrom: ${chatMessage.phone_id}"
+        val text = "Sent on: ${chatMessage.timestamp.toDate()}\nFrom: ${chatMessage.phone_id}"
         findViewById<TextView>(R.id.message_detail_text).text = text
     }
 
