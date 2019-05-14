@@ -38,3 +38,17 @@ internal object Utils {
         return messageId
     }
 }
+
+/* Request codes */
+internal const val MESSAGE_DETAIL_REQUEST_CODE = 100
+/* Chat Messages constants */
+internal const val CHAT_MESSAGE_ID = "chat_message_id"
+internal const val CHAT_MESSAGES_IDS = "chat_message_ids"
+internal const val CHAT_MESSAGE_CONTENT_PREFIX = "message_content_"
+internal const val CHAT_MESSAGE_TIMESTAMP_PREFIX = "message_timestamp_"
+internal const val CHAT_MESSAGE_PHONE_ID_PREFIX = "message_phone_id_"
+/* Firebase constants */
+internal const val FIREBASE_CHAT_MESSAGES = "chat_messages"
+internal const val FIREBASE_DEFAULTS = "defaults"
+internal const val FIREBASE_DEFAULTS_USERNAME_DOC_ID = "username"
+internal const val FIREBASE_DEFAULTS_USERNAME_NAME_KEY = "name"

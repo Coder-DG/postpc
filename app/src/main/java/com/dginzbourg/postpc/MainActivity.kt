@@ -1,6 +1,7 @@
 package com.dginzbourg.postpc
 
 import android.content.Context
+import android.content.Intent
 import android.content.SharedPreferences
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
@@ -9,6 +10,7 @@ import android.support.v7.widget.RecyclerView
 import android.util.Log
 import android.widget.Button
 import android.widget.EditText
+import android.widget.TextView
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FirebaseFirestore
 import java.util.*
@@ -26,6 +28,7 @@ class MainActivity : AppCompatActivity() {
     private var editTextString: String? = ""
     private val db = FirebaseFirestore.getInstance()
     private lateinit var sharedPref: SharedPreferences
+    private var name = ""
 
     private fun getAvailableMessageID(): String {
         var id: String
@@ -42,6 +45,7 @@ class MainActivity : AppCompatActivity() {
                 Context.MODE_PRIVATE)
         setContentView(R.layout.activity_main)
 
+        fetchUserName()
         editText = findViewById(R.id.edit_text)
         editText.setText(editTextString)
         val button = findViewById<Button>(R.id.button)
@@ -53,6 +57,28 @@ class MainActivity : AppCompatActivity() {
                 LinearLayoutManager.VERTICAL,
                 false)
         recyclerView.adapter = adapter
+    }
+
+    private fun fetchUserName() {
+        if (name.isNotEmpty()) {
+            displayUserName()
+            return
+        }
+        db.collection(FIREBASE_DEFAULTS)
+                .document(FIREBASE_DEFAULTS_USERNAME_DOC_ID)
+                .get()
+                .addOnSuccessListener {
+                    val tmp = it[FIREBASE_DEFAULTS_USERNAME_NAME_KEY] as String?
+                    if (tmp?.isNotEmpty() == true) {
+                        this@MainActivity.name = tmp
+                        displayUserName()
+                    }
+                }
+    }
+
+    private fun displayUserName() = runOnUiThread {
+        val tmp = "Hello $name!"
+        findViewById<TextView>(R.id.top_right_text_view).text = tmp
     }
 
     private fun handleSend() {
@@ -91,49 +117,32 @@ class MainActivity : AppCompatActivity() {
     inner class OnItemClickCallback : MessageRecyclerUtils.ChatMessageLongClickCallBack {
         override fun onLongClick(pos: Int): Boolean {
             Log.d("onLongClick", "Clicked on item $pos")
-            val dialog = Utils.getAlertDialog(
-                    this@MainActivity,
-                    getString(R.string.deletion_alert),
-                    getString(R.string.alert),
-                    getString(R.string.yes),
-                    getString(R.string.cancel),
-                    { removeChatMessageAt(pos) })
-            dialog?.show()
+            val intent = Intent(this@MainActivity,
+                    MessageDetailActivity::class.java)
+            intent.putExtra(CHAT_MESSAGE_ID, chatMessages[pos].id)
+            startActivityForResult(intent, MESSAGE_DETAIL_REQUEST_CODE)
+//            val dialog = Utils.getAlertDialog(
+//                    this@MainActivity,
+//                    getString(R.string.deletion_alert),
+//                    getString(R.string.alert),
+//                    getString(R.string.yes),
+//                    getString(R.string.cancel),
+//                    {
+//                                                removeChatMessageAt(pos)
+//                    })
+//            dialog?.show()
             return true
         }
     }
 
-    fun removeChatMessageAt(pos: Int) {
-        val chatMessagesCopy = ArrayList(chatMessages)
-        val chatMessage = chatMessagesCopy.removeAt(pos)
-        messageIDs.remove(chatMessage.id)
-        removeMessageFromDB(chatMessage)
-        chatMessages = chatMessagesCopy
-        adapter.submitList(chatMessages)
-    }
-
-    private fun removeMessageFromDB(chatMessage: ChatMessage) {
-        removeMessageFromLocalDB(chatMessage)
-        removeMessageFromRemoteDB(chatMessage)
-    }
-
-    private fun removeMessageFromLocalDB(chatMessage: ChatMessage) {
-        with(sharedPref.edit()) {
-            remove(CHAT_MESSAGE_CONTENT_PREFIX + chatMessage.id)
-            remove(CHAT_MESSAGE_TIMESTAMP_PREFIX + chatMessage.id)
-            apply()
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        if (requestCode == MESSAGE_DETAIL_REQUEST_CODE && resultCode == RESULT_OK) {
+            restoreChatMessages()
         }
     }
 
-    private fun removeMessageFromRemoteDB(chatMessage: ChatMessage) {
-        db.collection(CHAT_MESSAGE_FIREBASE_COLLECTION)
-                .document(chatMessage.id)
-                .delete()
-                .addOnSuccessListener {
-                    Log.d("firebase", "Successfully deleted chat message " +
-                            "with ID: ${chatMessage.id}")
-                }
-    }
+
+
 
     private fun addChatMessage(content: String) {
         val chatMessagesCopy = ArrayList(chatMessages)
@@ -179,7 +188,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun saveChatMessageToRemoteDB(chatMessage: ChatMessage) {
-        db.collection(CHAT_MESSAGE_FIREBASE_COLLECTION)
+        db.collection(FIREBASE_CHAT_MESSAGES)
                 .document(chatMessage.id)
                 .set(chatMessage)
                 .addOnSuccessListener { df ->
@@ -192,7 +201,7 @@ class MainActivity : AppCompatActivity() {
 
 
     private fun restoreChatMessages() {
-        db.collection(CHAT_MESSAGE_FIREBASE_COLLECTION)
+        db.collection(FIREBASE_CHAT_MESSAGES)
                 .get()
                 .addOnSuccessListener { result ->
                     Log.d("firebase", "Restored ${result.size()} messages from Firebase.")
@@ -222,13 +231,13 @@ class MainActivity : AppCompatActivity() {
         for (id in messageIDs) {
             val content = sharedPref.getString(CHAT_MESSAGE_CONTENT_PREFIX + id, null)
             val timestampLong = sharedPref.getLong(CHAT_MESSAGE_TIMESTAMP_PREFIX + id, -1)
-
+            val phoneId = sharedPref.getString(CHAT_MESSAGE_PHONE_ID_PREFIX + id, "Unknown")
             if (content != null && timestampLong == -1L)
                 continue
 
             val timestamp = Timestamp(Date(timestampLong))
             // This shouldn't warn me, but it does, so I used this idiom
-            chatMessagesTmp.add(ChatMessage(id, content ?: "", timestamp))
+            chatMessagesTmp.add(ChatMessage(id, content ?: "", timestamp, phoneId))
         }
         chatMessagesTmp.sortBy { it.timestamp }
         Log.i("restoreChatMessages", "Restored ${chatMessagesTmp.size} messages.")
@@ -238,10 +247,6 @@ class MainActivity : AppCompatActivity() {
     companion object {
 
         internal const val EDIT_TEXT_STRING_KEY = "editText"
-        // Chat Messages constants
-        internal const val CHAT_MESSAGES_IDS = "chat_message_ids"
-        internal const val CHAT_MESSAGE_CONTENT_PREFIX = "message_content_"
-        internal const val CHAT_MESSAGE_TIMESTAMP_PREFIX = "message_timestamp_"
-        internal const val CHAT_MESSAGE_FIREBASE_COLLECTION = "chat_messages"
     }
 }
+
