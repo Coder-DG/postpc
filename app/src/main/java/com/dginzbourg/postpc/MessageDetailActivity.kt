@@ -73,9 +73,13 @@ class MessageDetailActivity : AppCompatActivity() {
     }
 
     private fun removeMessageFromLocalDB(chatMessage: ChatMessage) {
+        val messageIDs = sharedPref.getStringSet(CHAT_MESSAGES_IDS, mutableSetOf()) ?: HashSet()
+        messageIDs.remove(chatMessage.id)
         with(sharedPref.edit()) {
             remove(CHAT_MESSAGE_CONTENT_PREFIX + chatMessage.id)
             remove(CHAT_MESSAGE_TIMESTAMP_PREFIX + chatMessage.id)
+            remove(CHAT_MESSAGE_PHONE_ID_PREFIX + chatMessage.id)
+            putStringSet(CHAT_MESSAGES_IDS, messageIDs)
             apply()
         }
     }
