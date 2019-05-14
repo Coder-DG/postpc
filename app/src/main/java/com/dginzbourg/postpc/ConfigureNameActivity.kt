@@ -19,6 +19,10 @@ class ConfigureNameActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_configure_name)
 
+        findViewById<Button>(R.id.welcome_skip_button).setOnClickListener {
+            finish()
+            startActivity(Intent(this, MainActivity::class.java))
+        }
         acceptNameButton = findViewById(R.id.welcome_accept_name_button)
         acceptNameButton.setOnClickListener {
             if (name.isNotEmpty()) {
