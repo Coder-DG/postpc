@@ -5,7 +5,6 @@ import android.content.Intent
 import android.content.SharedPreferences
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
-import android.os.Parcelable
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.util.Log
@@ -14,7 +13,6 @@ import android.widget.EditText
 import android.widget.TextView
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FirebaseFirestore
-import java.io.Serializable
 import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.collections.HashSet
@@ -119,31 +117,28 @@ class MainActivity : AppCompatActivity() {
     inner class OnItemClickCallback : MessageRecyclerUtils.ChatMessageLongClickCallBack {
         override fun onLongClick(pos: Int): Boolean {
             Log.d("onLongClick", "Clicked on item $pos")
-            val dialog = Utils.getAlertDialog(
-                    this@MainActivity,
-                    getString(R.string.deletion_alert),
-                    getString(R.string.alert),
-                    getString(R.string.yes),
-                    getString(R.string.cancel),
-                    {
-                        //                        removeChatMessageAt(pos)
-                        val intent = Intent(this@MainActivity,
-                                MessageDetailActivity::class.java)
-                        intent.putExtra(SINGLE_CHAT_MESSAGE, chatMessages[pos] as Serializable)
-                        startActivity(intent)
-                    })
-            dialog?.show()
+            val intent = Intent(this@MainActivity,
+                    MessageDetailActivity::class.java)
+            intent.putExtra(CHAT_MESSAGE_ID, chatMessages[pos].id)
+            startActivityForResult(intent, MESSAGE_DETAIL_REQUEST_CODE)
+//            val dialog = Utils.getAlertDialog(
+//                    this@MainActivity,
+//                    getString(R.string.deletion_alert),
+//                    getString(R.string.alert),
+//                    getString(R.string.yes),
+//                    getString(R.string.cancel),
+//                    {
+//                                                removeChatMessageAt(pos)
+//                    })
+//            dialog?.show()
             return true
         }
     }
 
-    fun removeChatMessageAt(pos: Int) {
-        val chatMessagesCopy = ArrayList(chatMessages)
-        val chatMessage = chatMessagesCopy.removeAt(pos)
-        messageIDs.remove(chatMessage.id)
-        removeMessageFromDB(chatMessage)
-        chatMessages = chatMessagesCopy
-        adapter.submitList(chatMessages)
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        if (requestCode == MESSAGE_DETAIL_REQUEST_CODE && resultCode == RESULT_OK) {
+            restoreChatMessages()
+        }
     }
 
     private fun removeMessageFromDB(chatMessage: ChatMessage) {
@@ -256,13 +251,13 @@ class MainActivity : AppCompatActivity() {
         for (id in messageIDs) {
             val content = sharedPref.getString(CHAT_MESSAGE_CONTENT_PREFIX + id, null)
             val timestampLong = sharedPref.getLong(CHAT_MESSAGE_TIMESTAMP_PREFIX + id, -1)
-
+            val phoneId = sharedPref.getString(CHAT_MESSAGE_PHONE_ID_PREFIX + id, "Unknown")
             if (content != null && timestampLong == -1L)
                 continue
 
             val timestamp = Timestamp(Date(timestampLong))
             // This shouldn't warn me, but it does, so I used this idiom
-            chatMessagesTmp.add(ChatMessage(id, content ?: "", timestamp))
+            chatMessagesTmp.add(ChatMessage(id, content ?: "", timestamp, phoneId))
         }
         chatMessagesTmp.sortBy { it.timestamp }
         Log.i("restoreChatMessages", "Restored ${chatMessagesTmp.size} messages.")
@@ -272,10 +267,6 @@ class MainActivity : AppCompatActivity() {
     companion object {
 
         internal const val EDIT_TEXT_STRING_KEY = "editText"
-        // Chat Messages constants
-        internal const val CHAT_MESSAGES_IDS = "chat_message_ids"
-        internal const val CHAT_MESSAGE_CONTENT_PREFIX = "message_content_"
-        internal const val CHAT_MESSAGE_TIMESTAMP_PREFIX = "message_timestamp_"
     }
 }
 
