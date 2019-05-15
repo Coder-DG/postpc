@@ -29,11 +29,12 @@ class SettingsActivity : AppCompatActivity() {
             if (ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED)
                 Log.d("permissions request", "Requested permission $permission")
             requestPermissions(permissionArray, 123)
+            break
         }
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
-        if (grantResults.isEmpty() || grantResults[0] != PackageManager.PERMISSION_GRANTED) {
+        if (grantResults.isEmpty() || grantResults.any { it != PackageManager.PERMISSION_GRANTED }) {
             getAlertDialog(
                 this,
                 "Please grant the requested permissions",
