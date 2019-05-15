@@ -27,6 +27,7 @@ class SettingsActivity : AppCompatActivity() {
     private lateinit var smsPrefixEditText: EditText
     private lateinit var sharedPreferences: SharedPreferences
     private lateinit var messageTextView: TextView
+    private lateinit var currThread: Thread
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -82,7 +83,7 @@ class SettingsActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        Thread {
+        currThread = Thread {
             with(sharedPreferences) {
                 val phonNoString = getString(PHONE_NO_KEY, "") ?: ""
                 val smsPrefixString = getString(SMS_PREFIX, "") ?: ""
@@ -94,16 +95,20 @@ class SettingsActivity : AppCompatActivity() {
                     checkEditTextValidity(smsPrefixString, smsPrefixEditText)
                 }
             }
-        }.start()
+        }
+        currThread.start()
     }
 
     override fun onPause() {
         super.onPause()
-        with(sharedPreferences.edit()) {
-            putString(PHONE_NO_KEY, phoneNoEditText.text.toString())
-            putString(SMS_PREFIX, smsPrefixEditText.text.toString())
-            apply()
-        }
+        Thread {
+            currThread.join()
+            with(sharedPreferences.edit()) {
+                putString(PHONE_NO_KEY, phoneNoEditText.text.toString())
+                putString(SMS_PREFIX, smsPrefixEditText.text.toString())
+                apply()
+            }
+        }.start()
     }
 
     private fun validatePermissionsGranted() {
