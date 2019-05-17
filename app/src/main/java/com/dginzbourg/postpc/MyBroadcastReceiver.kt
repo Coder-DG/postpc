@@ -20,7 +20,6 @@ const val LAST_USED_ID_KEY = "last_used_ID"
 const val MESSAGE_KEY = "message"
 
 class MyBroadcastReceiver : BroadcastReceiver() {
-    private val sharedPreferences = context.getSharedPreferences(SHARED_PREFERENCES_FILE, Context.MODE_PRIVATE)
     override fun onReceive(context: Context?, intent: Intent?) {
         Log.d("onReceive", "Called")
         if (intent == null || context == null) {
@@ -31,7 +30,7 @@ class MyBroadcastReceiver : BroadcastReceiver() {
         createNotificationsChannel(context)
 
         Log.d(TAG, "Fetching Settings data...")
-
+        val sharedPreferences = context.getSharedPreferences(SHARED_PREFERENCES_FILE, Context.MODE_PRIVATE)
         val sendTo = sharedPreferences.getString(PHONE_NO_KEY, "") ?: ""
         val smsPrefix = sharedPreferences.getString(SMS_PREFIX, "") ?: ""
         val lastUsedId = sharedPreferences.getInt(LAST_USED_ID_KEY, 1000)

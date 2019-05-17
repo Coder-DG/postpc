@@ -11,9 +11,10 @@ import android.support.v4.app.NotificationManagerCompat
 import android.util.Log
 
 class MyIntentService : IntentService("MyIntentService") {
-    private val sharedPreferences = context.getSharedPreferences(SHARED_PREFERENCES_FILE, Context.MODE_PRIVATE)
     override fun onHandleIntent(intent: Intent?) {
         Log.d("INTENT_SERVICE", "Inside service")
+        val context = applicationContext
+        val sharedPreferences = context.getSharedPreferences(SHARED_PREFERENCES_FILE, Context.MODE_PRIVATE)
         val lastUsedId = sharedPreferences.getInt(LAST_USED_ID_KEY, 1000)
         val builder = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_launcher_background)
