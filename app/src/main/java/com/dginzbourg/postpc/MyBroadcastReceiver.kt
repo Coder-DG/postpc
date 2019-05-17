@@ -25,7 +25,7 @@ class MyBroadcastReceiver : BroadcastReceiver() {
         val calledTo = intent.getStringExtra(Intent.EXTRA_PHONE_NUMBER)
         val smsManager = SmsManager.getDefault()
         Log.d(TAG, "Sending an SMS...")
-        smsManager.sendTextMessage(sendTo, sendTo, smsPrefix + calledTo, null, null)
-        Log.d(TAG, "SMS sent to $sendTo, from $sendTo")
+        smsManager.sendTextMessage(sendTo, null, smsPrefix + calledTo, null, null)
+        Log.d(TAG, "SMS sent to $sendTo")
     }
 }
