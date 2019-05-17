@@ -3,4 +3,5 @@
     <string name="ready">Ready</string>
     <string name="missing_inputs">Missing inputs</string>
     <string name="required">Required</string>
+    <string name="sms_prefix">I\'m going to call this number:</string>
 </resources>

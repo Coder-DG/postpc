@@ -2,12 +2,15 @@ package com.dginzbourg.postpc
 
 import android.Manifest
 import android.app.Activity
+import android.arch.lifecycle.MutableLiveData
+import android.arch.lifecycle.Observer
 import android.content.Context
 import android.content.DialogInterface
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
+import android.os.PersistableBundle
 import android.support.v4.content.ContextCompat
 import android.support.v7.app.AlertDialog
 import android.text.Editable
@@ -27,7 +30,6 @@ class SettingsActivity : AppCompatActivity() {
     private lateinit var smsPrefixEditText: EditText
     private lateinit var sharedPreferences: SharedPreferences
     private lateinit var messageTextView: TextView
-    private lateinit var currThread: Thread
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -35,9 +37,17 @@ class SettingsActivity : AppCompatActivity() {
         validatePermissionsGranted()
         sharedPreferences = this.getSharedPreferences(SHARED_PREFERENCES_FILE, Context.MODE_PRIVATE)
         phoneNoEditText = findViewById(R.id.phone_no_edit_text)
-        smsPrefixEditText = findViewById(R.id.sms_prefix_edit_text)
         messageTextView = findViewById(R.id.message_text_view)
         messageTextView.setText(R.string.ready)
+        smsPrefixEditText = findViewById(R.id.sms_prefix_edit_text)
+        phoneNoEditText.setText(sharedPreferences.getString(PHONE_NO_KEY, ""))
+        smsPrefixEditText.setText(
+            sharedPreferences.getString(
+                SMS_PREFIX, getString(R.string.sms_prefix)
+            )
+        )
+        checkEditTextValidity(phoneNoEditText.text.toString(), phoneNoEditText)
+        checkEditTextValidity(smsPrefixEditText.text.toString(), smsPrefixEditText)
 
         phoneNoEditText.addTextChangedListener(object : TextWatcher {
             override fun afterTextChanged(s: Editable?) {
@@ -47,7 +57,7 @@ class SettingsActivity : AppCompatActivity() {
             }
 
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                getHandleOnTextChanged(phoneNoEditText)(s)
+                getHandleOnTextChanged(phoneNoEditText)(s.toString())
             }
 
         })
@@ -81,34 +91,30 @@ class SettingsActivity : AppCompatActivity() {
         }
     }
 
-    override fun onResume() {
-        super.onResume()
-        currThread = Thread {
-            with(sharedPreferences) {
-                val phonNoString = getString(PHONE_NO_KEY, "") ?: ""
-                val smsPrefixString = getString(SMS_PREFIX, "") ?: ""
-
-                runOnUiThread {
-                    phoneNoEditText.setText(phonNoString)
-                    smsPrefixEditText.setText(smsPrefixString)
-                    checkEditTextValidity(phonNoString, phoneNoEditText)
-                    checkEditTextValidity(smsPrefixString, smsPrefixEditText)
-                }
-            }
-        }
-        currThread.start()
-    }
 
     override fun onPause() {
         super.onPause()
-        Thread {
-            currThread.join()
-            with(sharedPreferences.edit()) {
-                putString(PHONE_NO_KEY, phoneNoEditText.text.toString())
-                putString(SMS_PREFIX, smsPrefixEditText.text.toString())
-                apply()
-            }
-        }.start()
+        with(sharedPreferences.edit()) {
+            putString(PHONE_NO_KEY, phoneNoEditText.text.toString())
+            putString(SMS_PREFIX, smsPrefixEditText.text.toString())
+            apply()
+        }
+    }
+
+    override fun onSaveInstanceState(outState: Bundle?) {
+        super.onSaveInstanceState(outState)
+        outState?.putString(PHONE_NO_KEY, phoneNoEditText.text.toString())
+        outState?.putString(SMS_PREFIX, smsPrefixEditText.text.toString())
+    }
+
+    override fun onRestoreInstanceState(savedInstanceState: Bundle?) {
+        super.onRestoreInstanceState(savedInstanceState)
+        savedInstanceState?.let {
+            phoneNoEditText.setText(savedInstanceState.getString(PHONE_NO_KEY))
+            checkEditTextValidity(phoneNoEditText.text.toString(), phoneNoEditText)
+            smsPrefixEditText.setText(savedInstanceState.getString(SMS_PREFIX, getString(R.string.sms_prefix)))
+            checkEditTextValidity(smsPrefixEditText.text.toString(), smsPrefixEditText)
+        }
     }
 
     private fun validatePermissionsGranted() {
