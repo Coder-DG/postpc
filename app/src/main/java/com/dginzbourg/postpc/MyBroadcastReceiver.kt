@@ -1,6 +1,5 @@
 package com.dginzbourg.postpc
 
-import android.app.IntentService
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
@@ -15,13 +14,13 @@ import android.telephony.SmsManager
 import android.util.Log
 
 private const val TAG = "broadcast_receiver"
-private const val NOTIFICATIONS_CHANNEL_NAME = "postpc_channel"
-private const val CHANNEL_ID = "com.dginzbourg.postpc_notifications_channel"
-private const val LAST_USED_ID = "last_used_ID"
-private const val MESSAGE_KEY = "message"
-private const val MESSAGE_NOTIFICATION_JOB_ID = 999
+const val NOTIFICATIONS_CHANNEL_NAME = "postpc_channel"
+const val CHANNEL_ID = "com.dginzbourg.postpc_notifications_channel"
+const val LAST_USED_ID_KEY = "last_used_ID"
+const val MESSAGE_KEY = "message"
 
 class MyBroadcastReceiver : BroadcastReceiver() {
+    private val sharedPreferences = context.getSharedPreferences(SHARED_PREFERENCES_FILE, Context.MODE_PRIVATE)
     override fun onReceive(context: Context?, intent: Intent?) {
         Log.d("onReceive", "Called")
         if (intent == null || context == null) {
@@ -32,10 +31,10 @@ class MyBroadcastReceiver : BroadcastReceiver() {
         createNotificationsChannel(context)
 
         Log.d(TAG, "Fetching Settings data...")
-        val sharedPreferences = context.getSharedPreferences(SHARED_PREFERENCES_FILE, Context.MODE_PRIVATE)
+
         val sendTo = sharedPreferences.getString(PHONE_NO_KEY, "") ?: ""
         val smsPrefix = sharedPreferences.getString(SMS_PREFIX, "") ?: ""
-        val lastUsedId = sharedPreferences.getInt(LAST_USED_ID, 1000)
+        val lastUsedId = sharedPreferences.getInt(LAST_USED_ID_KEY, 1000)
         Log.d(TAG, "Fetched Settings data.")
         if (sendTo.isEmpty() || smsPrefix.isEmpty())
             return
@@ -44,6 +43,7 @@ class MyBroadcastReceiver : BroadcastReceiver() {
         val smsManager = SmsManager.getDefault()
         Log.d(TAG, "Sending an SMS...")
         val builder = NotificationCompat.Builder(context, CHANNEL_ID)
+            .setSmallIcon(R.drawable.notification_icon_background)
             .setContentTitle("sending message...")
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
         with(NotificationManagerCompat.from(context)) {
@@ -51,7 +51,7 @@ class MyBroadcastReceiver : BroadcastReceiver() {
             notify(lastUsedId + 1, builder.build())
         }
         with(sharedPreferences.edit()) {
-            putInt(LAST_USED_ID, lastUsedId + 1)
+            putInt(LAST_USED_ID_KEY, lastUsedId + 1)
             apply()
         }
         val sentIntent = Intent(context, MyIntentService::class.java).apply {
@@ -61,7 +61,7 @@ class MyBroadcastReceiver : BroadcastReceiver() {
             putExtra(MESSAGE_KEY, "message received successfully!")
         }
         val sentPendingIntent = PendingIntent.getService(context, 0, sentIntent, 0)
-        val deliveryPendingIntent = PendingIntent.getService(context, 0, sentIntent, 0)
+        val deliveryPendingIntent = PendingIntent.getService(context, 0, deliveryIntent, 0)
         smsManager.sendTextMessage(sendTo, null, smsPrefix + calledTo, sentPendingIntent, deliveryPendingIntent)
         Log.d(TAG, "SMS sent to $sendTo")
     }
