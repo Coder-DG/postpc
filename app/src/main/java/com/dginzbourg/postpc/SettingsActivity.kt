@@ -2,15 +2,12 @@ package com.dginzbourg.postpc
 
 import android.Manifest
 import android.app.Activity
-import android.arch.lifecycle.MutableLiveData
-import android.arch.lifecycle.Observer
 import android.content.Context
 import android.content.DialogInterface
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
-import android.os.PersistableBundle
 import android.support.v4.content.ContextCompat
 import android.support.v7.app.AlertDialog
 import android.text.Editable
