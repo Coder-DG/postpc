@@ -9,6 +9,7 @@ import android.util.Log
 private const val TAG = "broadcast_receiver"
 class MyBroadcastReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context?, intent: Intent?) {
+        Log.d("onReceive", "Called")
         if (intent == null || context == null) {
             Log.d(TAG, "Intent is null, returning.")
             return

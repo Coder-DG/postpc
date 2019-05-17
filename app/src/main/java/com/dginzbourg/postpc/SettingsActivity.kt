@@ -30,6 +30,7 @@ class SettingsActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        Log.d("onCreate", "Called")
         setContentView(R.layout.activity_settings)
         validatePermissionsGranted()
         sharedPreferences = this.getSharedPreferences(SHARED_PREFERENCES_FILE, Context.MODE_PRIVATE)
@@ -91,6 +92,7 @@ class SettingsActivity : AppCompatActivity() {
 
     override fun onPause() {
         super.onPause()
+        Log.d("onPause", "Called")
         with(sharedPreferences.edit()) {
             putString(PHONE_NO_KEY, phoneNoEditText.text.toString())
             putString(SMS_PREFIX, smsPrefixEditText.text.toString())
@@ -100,12 +102,14 @@ class SettingsActivity : AppCompatActivity() {
 
     override fun onSaveInstanceState(outState: Bundle?) {
         super.onSaveInstanceState(outState)
+        Log.d("onSaveInstanceState", "Called")
         outState?.putString(PHONE_NO_KEY, phoneNoEditText.text.toString())
         outState?.putString(SMS_PREFIX, smsPrefixEditText.text.toString())
     }
 
     override fun onRestoreInstanceState(savedInstanceState: Bundle?) {
         super.onRestoreInstanceState(savedInstanceState)
+        Log.d("onRestoreInstanceState", "Called")
         savedInstanceState?.let {
             phoneNoEditText.setText(savedInstanceState.getString(PHONE_NO_KEY))
             checkEditTextValidity(phoneNoEditText.text.toString(), phoneNoEditText)
@@ -124,6 +128,7 @@ class SettingsActivity : AppCompatActivity() {
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
+        Log.d("onRequestPermission", "Called")
         if (grantResults.isEmpty() || grantResults.any { it != PackageManager.PERMISSION_GRANTED }) {
             getAlertDialog(
                 this,
