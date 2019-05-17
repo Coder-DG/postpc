@@ -1,11 +1,7 @@
 <resources>
-    <string name="app_name">PostChat</string>
-    <string name="hint">Write something…</string>
-    <string name="send_button">Send</string>
-    <string name="empty_message_error">Cannot send an empty message</string>
-    <string name="shared_pref_chat_messages">com.dginzbourg.postpc.shared_pref_chat_messages</string>
-    <string name="alert">Alert</string>
-    <string name="deletion_alert">Are you sure?</string>
-    <string name="yes">Yes</string>
-    <string name="cancel">Cancel</string>
+    <string name="app_name">PostPC</string>
+    <string name="ready">Ready</string>
+    <string name="missing_inputs">Missing inputs</string>
+    <string name="required">Required</string>
+    <string name="sms_prefix">I\'m going to call this number:</string>
 </resources>
