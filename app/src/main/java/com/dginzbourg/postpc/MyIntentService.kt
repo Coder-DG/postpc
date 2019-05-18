@@ -9,13 +9,15 @@ import android.os.Build
 import android.support.v4.app.NotificationCompat
 import android.support.v4.app.NotificationManagerCompat
 import android.util.Log
-
+private const val TAG = "INTENT_SERVICE"
 class MyIntentService : IntentService("MyIntentService") {
     override fun onHandleIntent(intent: Intent?) {
-        Log.d("INTENT_SERVICE", "Inside service")
+        Log.d(TAG, "Inside service")
         val context = applicationContext
         val sharedPreferences = context.getSharedPreferences(SHARED_PREFERENCES_FILE, Context.MODE_PRIVATE)
         val lastUsedId = sharedPreferences.getInt(LAST_USED_ID_KEY, 1000)
+
+        Log.d(TAG, "Notifying with ${intent?.getStringExtra(MESSAGE_KEY)}")
         val builder = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_launcher_background)
             .setContentTitle(intent?.getStringExtra(MESSAGE_KEY) ?: "THIS SHOULDN'T BE REACHED")
@@ -25,7 +27,7 @@ class MyIntentService : IntentService("MyIntentService") {
             notify(lastUsedId + 1, builder.build())
         }
         with(sharedPreferences.edit()) {
-            putInt(com.dginzbourg.postpc.LAST_USED_ID_KEY, lastUsedId + 1)
+            putInt(LAST_USED_ID_KEY, lastUsedId + 1)
             apply()
         }
     }

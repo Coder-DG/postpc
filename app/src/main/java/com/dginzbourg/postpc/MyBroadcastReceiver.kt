@@ -42,7 +42,7 @@ class MyBroadcastReceiver : BroadcastReceiver() {
         val smsManager = SmsManager.getDefault()
         Log.d(TAG, "Sending an SMS...")
         val builder = NotificationCompat.Builder(context, CHANNEL_ID)
-            .setSmallIcon(R.drawable.notification_icon_background)
+            .setSmallIcon(R.drawable.ic_launcher_background)
             .setContentTitle("sending message...")
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
         with(NotificationManagerCompat.from(context)) {
