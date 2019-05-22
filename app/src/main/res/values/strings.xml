@@ -2,4 +2,6 @@
     <string name="app_name">PostPC</string>
     <string name="enterYourUsername">Enter your username</string>
     <string name="setUsername">Set Username</string>
+    <string name="usernameError">Only letters and numbers are allowed</string>
+    <string name="usernameRequired">Required</string>
 </resources>
