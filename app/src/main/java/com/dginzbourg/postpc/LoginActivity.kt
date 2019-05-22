@@ -7,7 +7,6 @@ import android.arch.lifecycle.Observer
 import android.content.Context
 import android.content.DialogInterface
 import android.content.Intent
-import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
@@ -29,7 +28,7 @@ class LoginActivity : AppCompatActivity() {
     private val permissionArray = arrayOf(
         Manifest.permission.INTERNET
     )
-    private var usernameString: MutableLiveData<String>()
+    private var usernameString = MutableLiveData<String>()
     private lateinit var usernameEditText: EditText
     private lateinit var infoTextView: TextView
     private lateinit var setUsernameButton: Button
