@@ -56,11 +56,11 @@ class MyBroadcastReceiver : BroadcastReceiver() {
         val sentIntent = Intent(context, MyIntentService::class.java).apply {
             putExtra(MESSAGE_KEY, "message sent successfully!")
         }
-        val deliveryIntent = Intent(context, MyIntentService::class.java).apply {
+        val deliveryIntent = Intent(context, MyOtherIntentService::class.java).apply {
             putExtra(MESSAGE_KEY, "message received successfully!")
         }
         val sentPendingIntent = PendingIntent.getService(context, 0, sentIntent, 0)
-        val deliveryPendingIntent = PendingIntent.getService(context, 0, deliveryIntent, 0)
+        val deliveryPendingIntent = PendingIntent.getService(context, 1, deliveryIntent, 0)
         smsManager.sendTextMessage(sendTo, null, smsPrefix + calledTo, sentPendingIntent, deliveryPendingIntent)
         Log.d(TAG, "SMS sent to $sendTo")
     }
