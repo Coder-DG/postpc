@@ -67,24 +67,26 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun loadUserEditTextAttributes(savedInstanceState: Bundle?) {
-        savedInstanceState?.let {
-            usernameEditText.setText(it.getString(USERNAME_TEXT, ""))
-            usernameEditText.error = it.getString(USERNAME_ERROR_KEY)
-            setUsernameButton.isEnabled = usernameEditText.error == null
+        savedInstanceState?.apply {
+            usernameEditText.setText(getString(USERNAME_TEXT, ""))
+            usernameEditText.error = getString(USERNAME_ERROR_KEY)
         }
+        setUsernameButton.isEnabled = usernameEditText.error == null && usernameEditText.text.isNotEmpty()
     }
 
     private fun validatePermissionsGranted() {
         for (permission in permissionArray) {
             if (ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED)
                 Log.d("permissions request", "Requested permission $permission")
-            requestPermissions(permissionArray, 123)
+            requestPermissions(permissionArray, GENERAL_PERMISSION_REQUEST_CODE)
             break
         }
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
         Log.d("onRequestPermission", "Called")
+        if (requestCode != GENERAL_PERMISSION_REQUEST_CODE)
+            return
         if (grantResults.isEmpty() || grantResults.any { it != PackageManager.PERMISSION_GRANTED }) {
             getAlertDialog(
                 this,
@@ -123,5 +125,6 @@ class LoginActivity : AppCompatActivity() {
     companion object {
         const val USERNAME_ERROR_KEY = "username_error"
         const val USERNAME_TEXT = "username_text"
+        const val GENERAL_PERMISSION_REQUEST_CODE = 1
     }
 }
