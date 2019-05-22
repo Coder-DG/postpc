@@ -26,6 +26,9 @@
         <service
                 android:name=".MyIntentService"
                 android:exported="false"/>
+        <service
+                android:name=".MyOtherIntentService"
+                android:exported="false"/>
     </application>
 
 </manifest>
