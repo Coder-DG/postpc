@@ -2,6 +2,8 @@ package com.dginzbourg.postpc
 
 import android.Manifest
 import android.app.Activity
+import android.arch.lifecycle.MutableLiveData
+import android.arch.lifecycle.Observer
 import android.content.DialogInterface
 import android.content.pm.PackageManager
 import android.support.v7.app.AppCompatActivity
@@ -13,14 +15,21 @@ import android.text.TextWatcher
 import android.util.Log
 import android.widget.Button
 import android.widget.EditText
+import android.widget.TextView
+import com.android.volley.Request
+import com.android.volley.Response
+import com.android.volley.toolbox.StringRequest
+import com.android.volley.toolbox.Volley
 
 class LoginActivity : AppCompatActivity() {
     private val permissionArray = arrayOf(
         Manifest.permission.INTERNET
     )
     private lateinit var usernameEditText: EditText
+    private lateinit var infoTextView: TextView
     private lateinit var setUsernameButton: Button
     private val usernameRegex = "[a-zA-Z0-9]+".toRegex()
+    private var isConnected = MutableLiveData<Boolean>().also { it.value = false }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -30,6 +39,7 @@ class LoginActivity : AppCompatActivity() {
 
         setUsernameButton = findViewById(R.id.loginSetUsername)
         usernameEditText = findViewById(R.id.loginUsername)
+        infoTextView = findViewById(R.id.infoTextView)
         loadUserEditTextAttributes(savedInstanceState)
         usernameEditText.addTextChangedListener(object : TextWatcher {
             override fun afterTextChanged(s: Editable?) {
@@ -47,23 +57,51 @@ class LoginActivity : AppCompatActivity() {
                     usernameEditText.error = null
                 }
 
-                setUsernameButton.isEnabled = usernameEditText.error == null
+                setUsernameButton.isEnabled = canSetUsername()
             }
 
         })
+        isConnected.observe(this,
+            Observer<Boolean> { t ->
+                setUsernameButton.isEnabled = canSetUsername()
+                infoTextView.text = if (t == true) {
+                    getString(R.string.connected)
+                } else {
+                    getString(R.string.not_connected)
+                }
+            })
+        checkConnection()
     }
+
+
+    private fun checkConnection() {
+        // Instantiate the RequestQueue.
+        val queue = Volley.newRequestQueue(this)
+
+// Request a string response from the provided URL.
+        val stringRequest = StringRequest(
+            Request.Method.GET,
+            SERVER_BASE_URL,
+            Response.Listener<String> {
+                isConnected.value = true
+            },
+            Response.ErrorListener {
+                isConnected.value = false
+            })
+
+// Add the request to the RequestQueue.
+        queue.add(stringRequest)
+    }
+
+    private fun canSetUsername(): Boolean = usernameEditText.error == null
+            && usernameEditText.text.isNotEmpty()
+            && isConnected.value ?: false
 
     override fun onRestoreInstanceState(savedInstanceState: Bundle?) {
         super.onRestoreInstanceState(savedInstanceState)
         loadUserEditTextAttributes(savedInstanceState)
-    }
-
-    override fun onSaveInstanceState(outState: Bundle?) {
-        super.onSaveInstanceState(outState)
-        outState?.apply {
-            putString(USERNAME_TEXT, usernameEditText.text.toString())
-            putString(USERNAME_ERROR_KEY, usernameEditText.error?.toString())
-        }
+        isConnected.value = savedInstanceState?.getBoolean(IS_CONNECTED_KEY, false) ?: false
+        setUsernameButton.isEnabled = canSetUsername()
     }
 
     private fun loadUserEditTextAttributes(savedInstanceState: Bundle?) {
@@ -71,8 +109,17 @@ class LoginActivity : AppCompatActivity() {
             usernameEditText.setText(getString(USERNAME_TEXT, ""))
             usernameEditText.error = getString(USERNAME_ERROR_KEY)
         }
-        setUsernameButton.isEnabled = usernameEditText.error == null && usernameEditText.text.isNotEmpty()
     }
+
+    override fun onSaveInstanceState(outState: Bundle?) {
+        super.onSaveInstanceState(outState)
+        outState?.apply {
+            putString(USERNAME_TEXT, usernameEditText.text.toString())
+            putString(USERNAME_ERROR_KEY, usernameEditText.error?.toString())
+            putBoolean(IS_CONNECTED_KEY, isConnected.value ?: false)
+        }
+    }
+
 
     private fun validatePermissionsGranted() {
         for (permission in permissionArray) {
@@ -125,6 +172,7 @@ class LoginActivity : AppCompatActivity() {
     companion object {
         const val USERNAME_ERROR_KEY = "username_error"
         const val USERNAME_TEXT = "username_text"
+        const val IS_CONNECTED_KEY = "isConnected"
         const val GENERAL_PERMISSION_REQUEST_CODE = 1
     }
 }
