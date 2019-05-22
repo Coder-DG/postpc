@@ -4,6 +4,6 @@
     <string name="setUsername">Set Username</string>
     <string name="usernameError">Only letters and numbers are allowed</string>
     <string name="usernameRequired">Required</string>
-    <string name="not_connected">Not connected</string>
+    <string name="not_connected">Not connected. Relaunch this app later to try again.</string>
     <string name="connected">Connected</string>
 </resources>

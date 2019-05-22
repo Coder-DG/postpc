@@ -4,7 +4,10 @@ import android.Manifest
 import android.app.Activity
 import android.arch.lifecycle.MutableLiveData
 import android.arch.lifecycle.Observer
+import android.content.Context
 import android.content.DialogInterface
+import android.content.Intent
+import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
@@ -26,6 +29,7 @@ class LoginActivity : AppCompatActivity() {
     private val permissionArray = arrayOf(
         Manifest.permission.INTERNET
     )
+    private var usernameString: MutableLiveData<String>()
     private lateinit var usernameEditText: EditText
     private lateinit var infoTextView: TextView
     private lateinit var setUsernameButton: Button
@@ -40,6 +44,13 @@ class LoginActivity : AppCompatActivity() {
         validatePermissionsGranted()
 
         setUsernameButton = findViewById(R.id.loginSetUsername)
+        setUsernameButton.setOnClickListener {
+            with(getSharedPreferences(SHARED_PREFERENCES_FILE, Context.MODE_PRIVATE).edit()) {
+                putString(DB_USERNAME_KEY, usernameEditText.text.toString())
+                apply()
+            }
+            startMainActivity()
+        }
         usernameEditText = findViewById(R.id.loginUsername)
         infoTextView = findViewById(R.id.infoTextView)
         loadUserEditTextAttributes(savedInstanceState)
@@ -76,6 +87,18 @@ class LoginActivity : AppCompatActivity() {
         checkConnection()
     }
 
+    private fun startMainActivity() {
+        startActivity(
+            Intent(this, MainActivity::class.java)
+                .putExtra(DB_USERNAME_KEY, usernameString.value)
+        )
+        finish()
+    }
+
+    private fun checkIfInitialized() {
+        // TODO(Make sure to hide all elements until connection is established and usernameString has been set)
+        throw NotImplementedError()
+    }
 
     private fun checkConnection() {
         // Instantiate the RequestQueue.
