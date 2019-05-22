@@ -16,10 +16,11 @@ import android.util.Log
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
-import com.android.volley.Request
+import com.android.volley.RequestQueue
 import com.android.volley.Response
-import com.android.volley.toolbox.StringRequest
+import com.android.volley.toolbox.JsonObjectRequest
 import com.android.volley.toolbox.Volley
+import org.json.JSONObject
 
 class LoginActivity : AppCompatActivity() {
     private val permissionArray = arrayOf(
@@ -30,6 +31,7 @@ class LoginActivity : AppCompatActivity() {
     private lateinit var setUsernameButton: Button
     private val usernameRegex = "[a-zA-Z0-9]+".toRegex()
     private var isConnected = MutableLiveData<Boolean>().also { it.value = false }
+    private lateinit var requestQueue: RequestQueue
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -70,27 +72,28 @@ class LoginActivity : AppCompatActivity() {
                     getString(R.string.not_connected)
                 }
             })
+        requestQueue = Volley.newRequestQueue(this)
         checkConnection()
     }
 
 
     private fun checkConnection() {
         // Instantiate the RequestQueue.
-        val queue = Volley.newRequestQueue(this)
-
 // Request a string response from the provided URL.
-        val stringRequest = StringRequest(
-            Request.Method.GET,
+        val stringRequest = JsonObjectRequest(
             SERVER_BASE_URL,
-            Response.Listener<String> {
+            null,
+            Response.Listener<JSONObject> {
                 isConnected.value = true
             },
             Response.ErrorListener {
                 isConnected.value = false
-            })
+            }).also {
+            it.tag = this
+        }
 
 // Add the request to the RequestQueue.
-        queue.add(stringRequest)
+        requestQueue.add(stringRequest)
     }
 
     private fun canSetUsername(): Boolean = usernameEditText.error == null
@@ -167,6 +170,12 @@ class LoginActivity : AppCompatActivity() {
             .setNegativeButton(negButtonText) { dialog, id -> negFunction(dialog, id) }
             .setCancelable(false)
         return builder.create()
+    }
+
+    override fun onStop() {
+        super.onStop()
+        if (this::requestQueue.isInitialized)
+            requestQueue.cancelAll(this)
     }
 
     companion object {
