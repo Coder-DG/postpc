@@ -1,0 +1,12 @@
+Save the token locally (for example in a file or in SP):
+	Con:
+		Not secure, the file system can be accessed more easily than the app's memory.
+		Also not secure because we'll be using the same credentials forever, by that time someone might figure out what it is.
+	Pro:
+		Less traffic from the phone and quicker than asking a server (see the con of the other option). This also means that the server would need to handle many more requests, linear to the amount of users.
+
+Use this token only in this current app-launch, and re-request a token from the server each time the app launches again:
+	Con:
+		More traffic that is needed. If the procedure to get the token is complicated, then it must be repeated again on each launch.
+	Pro:
+		Secure. It's harder to access an app's memory; and also in order to steal the token, a perpetrator would have to do his magic *every* time the app launches.
