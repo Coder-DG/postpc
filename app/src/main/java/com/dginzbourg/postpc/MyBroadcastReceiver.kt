@@ -16,7 +16,6 @@ import android.util.Log
 private const val TAG = "broadcast_receiver"
 const val NOTIFICATIONS_CHANNEL_NAME = "postpc_channel"
 const val CHANNEL_ID = "com.dginzbourg.postpc_notifications_channel"
-const val LAST_USED_ID_KEY = "last_used_ID"
 const val MESSAGE_KEY = "message"
 
 class MyBroadcastReceiver : BroadcastReceiver() {
@@ -33,7 +32,6 @@ class MyBroadcastReceiver : BroadcastReceiver() {
         val sharedPreferences = context.getSharedPreferences(SHARED_PREFERENCES_FILE, Context.MODE_PRIVATE)
         val sendTo = sharedPreferences.getString(PHONE_NO_KEY, "") ?: ""
         val smsPrefix = sharedPreferences.getString(SMS_PREFIX, "") ?: ""
-        val lastUsedId = sharedPreferences.getInt(LAST_USED_ID_KEY, 1000)
         Log.d(TAG, "Fetched Settings data.")
         if (sendTo.isEmpty() || smsPrefix.isEmpty())
             return
@@ -47,11 +45,7 @@ class MyBroadcastReceiver : BroadcastReceiver() {
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
         with(NotificationManagerCompat.from(context)) {
             // notificationId is a unique int for each notification that you must define
-            notify(lastUsedId + 1, builder.build())
-        }
-        with(sharedPreferences.edit()) {
-            putInt(LAST_USED_ID_KEY, lastUsedId + 1)
-            apply()
+            notify(1, builder.build())
         }
         val sentIntent = Intent(context, MyIntentService::class.java).apply {
             putExtra(MESSAGE_KEY, "message sent successfully!")

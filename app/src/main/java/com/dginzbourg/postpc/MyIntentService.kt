@@ -15,8 +15,6 @@ private fun onHandleIntent(intent: Intent?, intentService: IntentService) {
     Log.d(TAG, "Inside service")
     val context = intentService.applicationContext
     createNotificationsChannel(context)
-    val sharedPreferences = context.getSharedPreferences(SHARED_PREFERENCES_FILE, Context.MODE_PRIVATE)
-    val lastUsedId = sharedPreferences.getInt(LAST_USED_ID_KEY, 1000)
 
     Log.d(TAG, "Notifying with ${intent?.getStringExtra(MESSAGE_KEY)}")
     val builder = NotificationCompat.Builder(context, CHANNEL_ID)
@@ -25,11 +23,7 @@ private fun onHandleIntent(intent: Intent?, intentService: IntentService) {
         .setPriority(NotificationCompat.PRIORITY_DEFAULT)
     with(NotificationManagerCompat.from(context)) {
         // notificationId is a unique int for each notification that you must define
-        notify(lastUsedId + 1, builder.build())
-    }
-    with(sharedPreferences.edit()) {
-        putInt(LAST_USED_ID_KEY, lastUsedId + 1)
-        apply()
+        notify( 1, builder.build())
     }
 }
 
