@@ -92,9 +92,9 @@ class LoginActivity : AppCompatActivity() {
         checkConnection()
         usernameString.observe(this, Observer<String> {
             if (it == null) {
-                startMainActivity()
-            } else {
                 uiElementsVisibility(View.VISIBLE)
+            } else {
+                startMainActivity()
             }
         })
         checkIfInitialized()
