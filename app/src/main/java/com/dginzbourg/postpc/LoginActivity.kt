@@ -15,6 +15,7 @@ import android.support.v7.app.AlertDialog
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
+import android.view.View
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
@@ -23,6 +24,7 @@ import com.android.volley.Response
 import com.android.volley.toolbox.JsonObjectRequest
 import com.android.volley.toolbox.Volley
 import org.json.JSONObject
+import java.util.concurrent.Executors
 
 class LoginActivity : AppCompatActivity() {
     private val permissionArray = arrayOf(
@@ -35,6 +37,7 @@ class LoginActivity : AppCompatActivity() {
     private val usernameRegex = "[a-zA-Z0-9]+".toRegex()
     private var isConnected = MutableLiveData<Boolean>().also { it.value = false }
     private lateinit var requestQueue: RequestQueue
+    private val executor = Executors.newCachedThreadPool()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -43,6 +46,11 @@ class LoginActivity : AppCompatActivity() {
         validatePermissionsGranted()
 
         setUsernameButton = findViewById(R.id.loginSetUsername)
+        usernameEditText = findViewById(R.id.loginUsername)
+        infoTextView = findViewById(R.id.infoTextView)
+
+        uiElementsVisibility(View.GONE)
+
         setUsernameButton.setOnClickListener {
             with(getSharedPreferences(SHARED_PREFERENCES_FILE, Context.MODE_PRIVATE).edit()) {
                 putString(DB_USERNAME_KEY, usernameEditText.text.toString())
@@ -50,8 +58,6 @@ class LoginActivity : AppCompatActivity() {
             }
             startMainActivity()
         }
-        usernameEditText = findViewById(R.id.loginUsername)
-        infoTextView = findViewById(R.id.infoTextView)
         loadUserEditTextAttributes(savedInstanceState)
         usernameEditText.addTextChangedListener(object : TextWatcher {
             override fun afterTextChanged(s: Editable?) {
@@ -84,6 +90,18 @@ class LoginActivity : AppCompatActivity() {
             })
         requestQueue = Volley.newRequestQueue(this)
         checkConnection()
+        usernameString.observe(this, Observer<String> {
+            it?.let {
+                startMainActivity()
+            }
+        })
+        checkIfInitialized()
+    }
+
+    private fun uiElementsVisibility(visibility: Int) {
+        setUsernameButton.visibility = visibility
+        usernameEditText.visibility = visibility
+        infoTextView.visibility = visibility
     }
 
     private fun startMainActivity() {
@@ -96,7 +114,20 @@ class LoginActivity : AppCompatActivity() {
 
     private fun checkIfInitialized() {
         // TODO(Make sure to hide all elements until connection is established and usernameString has been set)
-        throw NotImplementedError()
+        executor.execute {
+            with(getSharedPreferences(SHARED_PREFERENCES_FILE, Context.MODE_PRIVATE)) {
+                val username = getString(DB_USERNAME_KEY, null)
+                usernameString.value = when {
+                    username?.isEmpty() == true -> null
+                    else -> username
+                }
+            }
+            if(usernameString.value == null) {
+                runOnUiThread {
+                    uiElementsVisibility(View.VISIBLE)
+                }
+            }
+        }
     }
 
     private fun checkConnection() {
@@ -198,6 +229,7 @@ class LoginActivity : AppCompatActivity() {
         super.onStop()
         if (this::requestQueue.isInitialized)
             requestQueue.cancelAll(this)
+        executor.shutdown()
     }
 
     companion object {
