@@ -35,7 +35,7 @@ class LoginActivity : AppCompatActivity() {
     private lateinit var infoTextView: TextView
     private lateinit var setUsernameButton: Button
     private val usernameRegex = "[a-zA-Z0-9]+".toRegex()
-    private var isConnected = MutableLiveData<Boolean>().also { it.value = false }
+    private var isConnected = MutableLiveData<Boolean>().also { it.postValue(false) }
     private lateinit var requestQueue: RequestQueue
     private val executor = Executors.newCachedThreadPool()
 
@@ -91,8 +91,10 @@ class LoginActivity : AppCompatActivity() {
         requestQueue = Volley.newRequestQueue(this)
         checkConnection()
         usernameString.observe(this, Observer<String> {
-            it?.let {
+            if (it == null) {
                 startMainActivity()
+            } else {
+                uiElementsVisibility(View.VISIBLE)
             }
         })
         checkIfInitialized()
@@ -117,15 +119,12 @@ class LoginActivity : AppCompatActivity() {
         executor.execute {
             with(getSharedPreferences(SHARED_PREFERENCES_FILE, Context.MODE_PRIVATE)) {
                 val username = getString(DB_USERNAME_KEY, null)
-                usernameString.value = when {
-                    username?.isEmpty() == true -> null
-                    else -> username
-                }
-            }
-            if(usernameString.value == null) {
-                runOnUiThread {
-                    uiElementsVisibility(View.VISIBLE)
-                }
+                usernameString.postValue(
+                    when {
+                        username?.isEmpty() == true -> null
+                        else -> username
+                    }
+                )
             }
         }
     }
@@ -137,10 +136,10 @@ class LoginActivity : AppCompatActivity() {
             SERVER_BASE_URL,
             null,
             Response.Listener<JSONObject> {
-                isConnected.value = true
+                isConnected.postValue(true)
             },
             Response.ErrorListener {
-                isConnected.value = false
+                isConnected.postValue(false)
             }).also {
             it.tag = this
         }
@@ -156,7 +155,7 @@ class LoginActivity : AppCompatActivity() {
     override fun onRestoreInstanceState(savedInstanceState: Bundle?) {
         super.onRestoreInstanceState(savedInstanceState)
         loadUserEditTextAttributes(savedInstanceState)
-        isConnected.value = savedInstanceState?.getBoolean(IS_CONNECTED_KEY, false) ?: false
+        isConnected.postValue(savedInstanceState?.getBoolean(IS_CONNECTED_KEY, false) ?: false)
         setUsernameButton.isEnabled = canSetUsername()
     }
 
