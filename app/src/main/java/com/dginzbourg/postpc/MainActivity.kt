@@ -247,12 +247,12 @@ class MainActivity : AppCompatActivity() {
 
     companion object {
         private val PIC_OPTIONS = arrayOf(
-            "/images/crab.png",
-            "/images/unicorn.png",
-            "/images/alien.png",
-            "/images/robot.png",
-            "/images/octopus.png",
-            "/images/frog.png"
+            "images/crab.png",
+            "images/unicorn.png",
+            "images/alien.png",
+            "images/robot.png",
+            "images/octopus.png",
+            "images/frog.png"
         )
         const val USERNAME = "username"
         const val PRETTY_NAME = "pretty_name"
