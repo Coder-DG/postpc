@@ -2,12 +2,9 @@ package com.dginzbourg.postpc
 
 import android.arch.lifecycle.MutableLiveData
 import android.arch.lifecycle.Observer
-import android.content.Context
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.support.v7.app.AlertDialog
-import android.text.Editable
-import android.text.TextWatcher
 import android.util.Log
 import android.widget.*
 import com.android.volley.RequestQueue
@@ -43,11 +40,9 @@ class MainActivity : AppCompatActivity() {
             return@Listener
         }
         picURL.postValue(data[REQUESTS_IMAGE_URL_KEY] as String)
-        if (prettyNameEditText.text.isNotEmpty()) {
+        if (prettyNameEditText.text.isEmpty()) {
             prettyName.postValue(data[REQUESTS_PRETTY_NAME_KEY] as String)
         }
-        val tmp = "Welcome back, ${intent.getStringExtra(DB_USERNAME_KEY)}!"
-        usernameTextView.text = tmp
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -60,8 +55,7 @@ class MainActivity : AppCompatActivity() {
         }
         initUIElements()
         if (!restoreUITexts(savedInstanceState)) {
-            val text = prettyNameEditText.text.toString()
-            updatePrettyNameButton.isEnabled = text.isNotBlank() && prettyName.value != text
+            showPrettyName()
         }
         setupOnClicks()
         setupListeners()
@@ -106,23 +100,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupListeners() {
-        prettyNameEditText.addTextChangedListener(object : TextWatcher {
-            override fun afterTextChanged(s: Editable?) {
-            }
-
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
-            }
-
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                val isTextValid = s?.isNotBlank() == true
-                updatePrettyNameButton.isEnabled = isTextValid && prettyName.value != s.toString()
-                prettyNameEditText.error = when (isTextValid) {
-                    false -> getString(R.string.invalid_pretty_name)
-                    else -> null
-                }
-            }
-
-        })
         token.observe(this, Observer {
             if (prettyNameEditText.text.toString().isBlank()) {
                 fetchUserInfo()
@@ -134,7 +111,17 @@ class MainActivity : AppCompatActivity() {
                 .override(500, 500)
                 .into(profilePic)
         })
-        prettyName.observe(this, Observer { prettyNameEditText.setText(prettyName.value) })
+        prettyName.observe(this, Observer {
+            showPrettyName()
+        })
+    }
+
+    private fun showPrettyName() {
+        val text = when {
+            prettyName.value?.isNotBlank() == true -> "Welcome back, ${prettyName.value}!"
+            else -> "No pretty name has been set."
+        }
+        prettyNameEditText.setText(text)
     }
 
     private fun showErrorToast() {
@@ -198,11 +185,7 @@ class MainActivity : AppCompatActivity() {
     private fun restoreUITexts(savedInstanceState: Bundle?): Boolean {
         savedInstanceState?.apply {
             username = getString(USERNAME, null)
-            val tmp = "Welcome back, $username!"
-            usernameTextView.text = tmp
             prettyNameEditText.setText(getString(PRETTY_NAME, "Error!"))
-            prettyNameEditText.error = getString(PRETTY_NAME_ERROR, null)
-            updatePrettyNameButton.isEnabled = getBoolean(UPDATE_BUTTON_IS_ENABLED, false)
             return true
         }
         return false
@@ -219,8 +202,6 @@ class MainActivity : AppCompatActivity() {
         outState?.apply {
             putString(USERNAME, username)
             putString(PRETTY_NAME, prettyNameEditText.text.toString())
-            putString(PRETTY_NAME_ERROR, prettyNameEditText.error?.toString())
-            putBoolean(UPDATE_BUTTON_IS_ENABLED, updatePrettyNameButton.isEnabled)
 
             putString(TOKEN, token.value)
             putString(PIC_URL, picURL.value)
@@ -261,8 +242,6 @@ class MainActivity : AppCompatActivity() {
         const val PRETTY_NAME = "pretty_name"
         const val PIC_URL = "pic_url"
         const val TOKEN = "token"
-        const val PRETTY_NAME_ERROR = "pretty_name_error"
-        const val UPDATE_BUTTON_IS_ENABLED = "update_button_is_enabled"
     }
 
 }
