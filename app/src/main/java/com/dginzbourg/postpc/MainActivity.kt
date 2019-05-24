@@ -100,7 +100,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun fetchUserInfo() {
         val request = JsonObjectRequest(
-            "$SERVER_BASE_URL$SERVER_USER_URL$username/$SERVER_TOKEN_URL",
+            "$SERVER_BASE_URL$SERVER_USER_URL",
             null,
             Response.Listener<JSONObject> {
                 if (!it.has(REQUESTS_DATA_KEY)) {
