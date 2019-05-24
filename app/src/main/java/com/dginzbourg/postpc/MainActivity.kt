@@ -133,7 +133,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun fetchToken() {
-        showToast(this, getString(R.string.loading), Toast.LENGTH_LONG)
+        showToast(this, getString(R.string.loading), Toast.LENGTH_SHORT)
         val request = JsonObjectRequest(
             "$SERVER_BASE_URL$SERVER_USERS_URL$username/$SERVER_TOKEN_URL",
             null,
