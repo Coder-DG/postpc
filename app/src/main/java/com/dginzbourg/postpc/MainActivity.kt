@@ -27,7 +27,23 @@ class MainActivity : AppCompatActivity() {
     private val executor = Executors.newCachedThreadPool()
 
     private lateinit var errorListener: Response.ErrorListener
-
+    private var updateUIFromDataListener = Response.Listener<JSONObject> {
+        if (!it.has(REQUESTS_DATA_KEY)) {
+            showErrorToast()
+            return@Listener
+        }
+        val data = it[REQUESTS_DATA_KEY] as JSONObject
+        if (!data.has(REQUESTS_PRETTY_NAME_KEY) || !data.has(REQUESTS_IMAGE_URL_KEY)) {
+            showErrorToast()
+            return@Listener
+        }
+        picURL.postValue(data[REQUESTS_IMAGE_URL_KEY] as String)
+        if (prettyNameEditText.text.isNotEmpty()) {
+            prettyName.postValue(data[REQUESTS_PRETTY_NAME_KEY] as String)
+        }
+        val tmp = "Welcome back, ${intent.getStringExtra(DB_USERNAME_KEY)}!"
+        usernameTextView.text = tmp
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -56,28 +72,12 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun updatePrettyName(name: String) {
-        val jsonRequestBody = HashMap<String,String>(1)
+        val jsonRequestBody = HashMap<String, String>(1)
         jsonRequestBody[REQUESTS_PRETTY_NAME_KEY] = name
         val request = object : JsonObjectRequest(
             "$SERVER_BASE_URL$SERVER_USER_URL$SERVER_EDIT_URL",
             JSONObject(jsonRequestBody),
-            Response.Listener<JSONObject> {
-                if (!it.has(REQUESTS_DATA_KEY)) {
-                    showErrorToast()
-                    return@Listener
-                }
-                val data = it[REQUESTS_DATA_KEY] as JSONObject
-                if (!data.has(REQUESTS_PRETTY_NAME_KEY) || !data.has(REQUESTS_IMAGE_URL_KEY)) {
-                    showErrorToast()
-                    return@Listener
-                }
-                picURL.postValue(data[REQUESTS_IMAGE_URL_KEY] as String)
-                if (prettyNameEditText.text.isNotEmpty()) {
-                    prettyName.postValue(data[REQUESTS_PRETTY_NAME_KEY] as String)
-                }
-                val tmp = "Welcome back, ${intent.getStringExtra(DB_USERNAME_KEY)}!"
-                usernameTextView.text = tmp
-            },
+            updateUIFromDataListener,
             errorListener
         ) {
             override fun getHeaders(): MutableMap<String, String> {
@@ -164,23 +164,7 @@ class MainActivity : AppCompatActivity() {
         val request = object : JsonObjectRequest(
             "$SERVER_BASE_URL$SERVER_USER_URL",
             null,
-            Response.Listener<JSONObject> {
-                if (!it.has(REQUESTS_DATA_KEY)) {
-                    showErrorToast()
-                    return@Listener
-                }
-                val data = it[REQUESTS_DATA_KEY] as JSONObject
-                if (!data.has(REQUESTS_PRETTY_NAME_KEY) || !data.has(REQUESTS_IMAGE_URL_KEY)) {
-                    showErrorToast()
-                    return@Listener
-                }
-                picURL.postValue(data[REQUESTS_IMAGE_URL_KEY] as String)
-                if (prettyNameEditText.text.isNotEmpty()) {
-                    prettyName.postValue(data[REQUESTS_PRETTY_NAME_KEY] as String)
-                }
-                val tmp = "Welcome back, ${intent.getStringExtra(DB_USERNAME_KEY)}!"
-                usernameTextView.text = tmp
-            },
+            updateUIFromDataListener,
             errorListener
         ) {
             override fun getHeaders(): MutableMap<String, String> {
@@ -203,7 +187,8 @@ class MainActivity : AppCompatActivity() {
     private fun restoreUITexts(savedInstanceState: Bundle?): Boolean {
         savedInstanceState?.apply {
             username = getString(USERNAME, null)
-            usernameTextView.text = username
+            val tmp = "Welcome back, $username!"
+            usernameTextView.text = tmp
             prettyNameEditText.setText(getString(PRETTY_NAME, "Error!"))
             prettyNameEditText.error = getString(PRETTY_NAME_ERROR, null)
             updatePrettyNameButton.isEnabled = getBoolean(UPDATE_BUTTON_IS_ENABLED, false)
