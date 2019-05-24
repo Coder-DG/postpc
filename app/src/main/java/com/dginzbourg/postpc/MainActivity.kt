@@ -33,15 +33,27 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         username = intent.getStringExtra(DB_USERNAME_KEY)
+        restoreData(savedInstanceState)
         errorListener = Response.ErrorListener {
             showErrorToast()
         }
         initUIElements()
         if (!restoreUITexts(savedInstanceState)) {
             usernameTextView.text = intent.getStringExtra(DB_USERNAME_KEY)
+            val text = prettyNameEditText.text.toString()
+            updatePrettyNameButton.isEnabled = text.isNotBlank() && prettyName.value != text
         }
         setupListeners()
-        fetchToken()
+        if (token.value == null || token.value?.isEmpty() == true) {
+            fetchToken()
+        }
+    }
+
+    private fun restoreData(savedInstanceState: Bundle?) {
+        savedInstanceState?.apply {
+            token.value = getString(TOKEN, null)
+            picURL.value = getString(PIC_URL, "")
+        }
     }
 
     private fun setupListeners() {
@@ -62,7 +74,11 @@ class MainActivity : AppCompatActivity() {
             }
 
         })
-        token.observe(this, Observer { fetchUserInfo() })
+        token.observe(this, Observer {
+            if (prettyNameEditText.text.toString().isBlank()) {
+                fetchUserInfo()
+            }
+        })
         picURL.observe(this, Observer {
             // TODO use Glide to inflate the image
         })
@@ -114,7 +130,9 @@ class MainActivity : AppCompatActivity() {
                     return@Listener
                 }
                 picURL.postValue(data[REQUESTS_IMAGE_URL_KEY] as String)
-                prettyName.postValue(data[REQUESTS_PRETTY_NAME_KEY] as String)
+                if (prettyNameEditText.text.isNotEmpty()) {
+                    prettyName.postValue(data[REQUESTS_PRETTY_NAME_KEY] as String)
+                }
             },
             errorListener
         ) {
@@ -151,6 +169,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onRestoreInstanceState(savedInstanceState: Bundle?) {
         super.onRestoreInstanceState(savedInstanceState)
+        restoreData(savedInstanceState)
         restoreUITexts(savedInstanceState)
     }
 
@@ -161,14 +180,10 @@ class MainActivity : AppCompatActivity() {
             putString(PRETTY_NAME, prettyNameEditText.text.toString())
             putString(PRETTY_NAME_ERROR, prettyNameEditText.error?.toString())
             putBoolean(UPDATE_BUTTON_IS_ENABLED, updatePrettyNameButton.isEnabled)
-        }
-    }
 
-    companion object {
-        const val USERNAME = "username"
-        const val PRETTY_NAME = "pretty_name"
-        const val PRETTY_NAME_ERROR = "pretty_name_error"
-        const val UPDATE_BUTTON_IS_ENABLED = "update_button_is_enabled"
+            putString(TOKEN, token.value)
+            putString(PIC_URL, picURL.value)
+        }
     }
 
     override fun onStop() {
@@ -177,4 +192,14 @@ class MainActivity : AppCompatActivity() {
             requestQueue.cancelAll(this)
         executor.shutdown()
     }
+
+    companion object {
+        const val USERNAME = "username"
+        const val PRETTY_NAME = "pretty_name"
+        const val PIC_URL = "pic_url"
+        const val TOKEN = "token"
+        const val PRETTY_NAME_ERROR = "pretty_name_error"
+        const val UPDATE_BUTTON_IS_ENABLED = "update_button_is_enabled"
+    }
+
 }
