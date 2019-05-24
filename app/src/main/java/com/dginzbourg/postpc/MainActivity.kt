@@ -100,7 +100,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun fetchUserInfo() {
-        val request = JsonObjectRequest(
+        val request = object : JsonObjectRequest(
             "$SERVER_BASE_URL$SERVER_USER_URL",
             null,
             Response.Listener<JSONObject> {
@@ -117,9 +117,14 @@ class MainActivity : AppCompatActivity() {
                 prettyName.postValue(data[REQUESTS_PRETTY_NAME_KEY] as String)
             },
             errorListener
-        ).also {
+        ) {
+            override fun getHeaders(): MutableMap<String, String> {
+                return HashMap<String, String>(1).also {
+                    it[REQUESTS_AUTHORIZATION_HEADER] = REQUESTS_TOKEN_PREFIX + token.value
+                }
+            }
+        }.also {
             it.tag = this
-            it.headers[REQUESTS_AUTHORIZATION_HEADER] = REQUESTS_TOKEN_PREFIX + token.value
         }
 
         addRequest(request)
