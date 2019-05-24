@@ -52,11 +52,13 @@ class LoginActivity : AppCompatActivity() {
         uiElementsVisibility(View.GONE)
 
         setUsernameButton.setOnClickListener {
+            if (usernameEditText.text.isEmpty())
+                return@setOnClickListener
             with(getSharedPreferences(SHARED_PREFERENCES_FILE, Context.MODE_PRIVATE).edit()) {
                 putString(DB_USERNAME_KEY, usernameEditText.text.toString())
                 apply()
             }
-            startMainActivity()
+            usernameString.value = usernameEditText.text.toString()
         }
         loadUserEditTextAttributes(savedInstanceState)
         usernameEditText.addTextChangedListener(object : TextWatcher {
