@@ -25,16 +25,25 @@ class MainActivity : AppCompatActivity() {
     private lateinit var requestQueue: RequestQueue
     private val executor = Executors.newCachedThreadPool()
 
+    private lateinit var errorListener: Response.ErrorListener
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        errorListener = Response.ErrorListener {
+            showErrorToast()
+        }
         initUIElements()
         if (!restoreUITexts(savedInstanceState)) {
             usernameTextView.text = intent.getStringExtra(DB_USERNAME_KEY)
         }
         fetchToken()
         token.observe(this, Observer { fetchUserInfo() })
+    }
+
+    private fun showErrorToast() {
+        showToast(this, getString(R.string.something_went_wrong), Toast.LENGTH_LONG)
     }
 
     private fun addRequest(request: JsonObjectRequest) {
@@ -49,9 +58,13 @@ class MainActivity : AppCompatActivity() {
             "$SERVER_BASE_URL$SERVER_USERS_URL$username/$SERVER_TOKEN_URL",
             null,
             Response.Listener<JSONObject> {
+                if (!it.has(REQUESTS_DATA_KEY)) {
+                    showErrorToast()
+                    return@Listener
+                }
                 token.postValue(it[REQUESTS_DATA_KEY] as String)
             },
-            Response.ErrorListener { responseError() }
+            errorListener
         ).also {
             it.tag = this
         }
@@ -59,12 +72,34 @@ class MainActivity : AppCompatActivity() {
         addRequest(request)
     }
 
-    private fun responseError() {
-        showToast(this, getString(R.string.something_went_wrong), Toast.LENGTH_LONG)
-    }
-
     private fun fetchUserInfo() {
+        val request = JsonObjectRequest(
+            "$SERVER_BASE_URL$SERVER_USER_URL$username/$SERVER_TOKEN_URL",
+            null,
+            Response.Listener<JSONObject> {
+                if (!it.has(REQUESTS_DATA_KEY)) {
+                    showErrorToast()
+                    return@Listener
+                }
+                val data = it[REQUESTS_DATA_KEY] as JSONObject
+                if (!data.has(REQUESTS_PRETTY_NAME_KEY) || !data.has(REQUESTS_IMAGE_URL_KEY)) {
+                    showErrorToast()
+                    return@Listener
+                }
+                userInfo.postValue(
+                    UserInfo(
+                        data[REQUESTS_PRETTY_NAME_KEY] as String,
+                        data[REQUESTS_IMAGE_URL_KEY] as String
+                    )
+                )
+            },
+            errorListener
+        ).also {
+            it.tag = this
+            it.headers[REQUESTS_AUTHORIZATION_HEADER] = REQUESTS_TOKEN_PREFIX + token.value
+        }
 
+        addRequest(request)
     }
 
     private fun initUIElements() {
