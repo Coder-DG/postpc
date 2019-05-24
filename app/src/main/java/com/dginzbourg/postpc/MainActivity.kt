@@ -40,9 +40,7 @@ class MainActivity : AppCompatActivity() {
             return@Listener
         }
         picURL.postValue(data[REQUESTS_IMAGE_URL_KEY] as String)
-        if (prettyNameEditText.text.isEmpty()) {
-            prettyName.postValue(data[REQUESTS_PRETTY_NAME_KEY] as String)
-        }
+        prettyName.postValue(data[REQUESTS_PRETTY_NAME_KEY] as String)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -121,7 +119,7 @@ class MainActivity : AppCompatActivity() {
             prettyName.value?.isNotBlank() == true -> "Welcome back, ${prettyName.value}!"
             else -> "No pretty name has been set."
         }
-        prettyNameEditText.setText(text)
+        usernameTextView.text = text
     }
 
     private fun showErrorToast() {
@@ -185,6 +183,7 @@ class MainActivity : AppCompatActivity() {
     private fun restoreUITexts(savedInstanceState: Bundle?): Boolean {
         savedInstanceState?.apply {
             username = getString(USERNAME, null)
+            usernameTextView.text = getString(USERNAME_TEXT_VIEW, "") ?: ""
             prettyNameEditText.setText(getString(PRETTY_NAME, "Error!"))
             return true
         }
@@ -201,6 +200,7 @@ class MainActivity : AppCompatActivity() {
         super.onSaveInstanceState(outState)
         outState?.apply {
             putString(USERNAME, username)
+            putString(USERNAME_TEXT_VIEW, usernameTextView.text.toString())
             putString(PRETTY_NAME, prettyNameEditText.text.toString())
 
             putString(TOKEN, token.value)
@@ -239,6 +239,7 @@ class MainActivity : AppCompatActivity() {
             "images/frog.png"
         )
         const val USERNAME = "username"
+        const val USERNAME_TEXT_VIEW = "username_text_view"
         const val PRETTY_NAME = "pretty_name"
         const val PIC_URL = "pic_url"
         const val TOKEN = "token"
