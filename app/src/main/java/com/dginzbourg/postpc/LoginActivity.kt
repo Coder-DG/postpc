@@ -88,7 +88,7 @@ class LoginActivity : AppCompatActivity() {
                     getString(R.string.not_connected)
                 }
             })
-        requestQueue = Volley.newRequestQueue(this)
+        requestQueue = Volley.newRequestQueue(application)
         checkConnection()
         usernameString.observe(this, Observer<String> {
             if (it == null) {
