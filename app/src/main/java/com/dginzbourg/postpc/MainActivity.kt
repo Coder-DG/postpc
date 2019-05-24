@@ -12,6 +12,7 @@ import com.android.volley.RequestQueue
 import com.android.volley.Response
 import com.android.volley.toolbox.JsonObjectRequest
 import com.android.volley.toolbox.Volley
+import com.bumptech.glide.Glide
 import org.json.JSONObject
 import java.util.concurrent.Executors
 
@@ -123,7 +124,7 @@ class MainActivity : AppCompatActivity() {
             }
         })
         picURL.observe(this, Observer {
-            // TODO use Glide to inflate the image
+            Glide.with(this).load(SERVER_BASE_URL + picURL.value).into(profilePic)
         })
         prettyName.observe(this, Observer { prettyNameEditText.setText(prettyName.value) })
     }
@@ -164,7 +165,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun fetchUserInfo() {
         val request = object : JsonObjectRequest(
-            "$SERVER_BASE_URL$SERVER_USER_URL",
+            SERVER_BASE_URL + SERVER_USER_URL,
             null,
             updateUIFromDataListener,
             errorListener
