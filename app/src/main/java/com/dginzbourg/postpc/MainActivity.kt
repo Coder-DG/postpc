@@ -42,10 +42,52 @@ class MainActivity : AppCompatActivity() {
             val text = prettyNameEditText.text.toString()
             updatePrettyNameButton.isEnabled = text.isNotBlank() && prettyName.value != text
         }
+        setupOnClick()
         setupListeners()
         if (token.value == null || token.value?.isEmpty() == true) {
             fetchToken()
         }
+    }
+
+    private fun setupOnClick() {
+        updatePrettyNameButton.setOnClickListener {
+            updatePrettyName(prettyNameEditText.text.toString())
+        }
+    }
+
+    private fun updatePrettyName(name: String) {
+        val jsonRequestBody = HashMap<String,String>(1)
+        jsonRequestBody[REQUESTS_PRETTY_NAME_KEY] = name
+        val request = object : JsonObjectRequest(
+            "$SERVER_BASE_URL$SERVER_USER_URL$SERVER_EDIT_URL",
+            JSONObject(jsonRequestBody),
+            Response.Listener<JSONObject> {
+                if (!it.has(REQUESTS_DATA_KEY)) {
+                    showErrorToast()
+                    return@Listener
+                }
+                val data = it[REQUESTS_DATA_KEY] as JSONObject
+                if (!data.has(REQUESTS_PRETTY_NAME_KEY) || !data.has(REQUESTS_IMAGE_URL_KEY)) {
+                    showErrorToast()
+                    return@Listener
+                }
+                picURL.postValue(data[REQUESTS_IMAGE_URL_KEY] as String)
+                if (prettyNameEditText.text.isNotEmpty()) {
+                    prettyName.postValue(data[REQUESTS_PRETTY_NAME_KEY] as String)
+                }
+                val tmp = "Welcome back, ${intent.getStringExtra(DB_USERNAME_KEY)}!"
+                usernameTextView.text = tmp
+            },
+            errorListener
+        ) {
+            override fun getHeaders(): MutableMap<String, String> {
+                return getDefaultHeaders().also { it[REQUESTS_CONTENT_TYPE_HEADER] = REQUESTS_CONTENT_TYPE_JSON }
+            }
+        }.also {
+            it.tag = this
+        }
+
+        addRequest(request)
     }
 
     private fun restoreData(savedInstanceState: Bundle?) {
@@ -114,6 +156,10 @@ class MainActivity : AppCompatActivity() {
         addRequest(request)
     }
 
+    private fun getDefaultHeaders() = HashMap<String, String>(1).also {
+        it[REQUESTS_AUTHORIZATION_HEADER] = REQUESTS_TOKEN_PREFIX + token.value
+    }
+
     private fun fetchUserInfo() {
         val request = object : JsonObjectRequest(
             "$SERVER_BASE_URL$SERVER_USER_URL",
@@ -138,9 +184,7 @@ class MainActivity : AppCompatActivity() {
             errorListener
         ) {
             override fun getHeaders(): MutableMap<String, String> {
-                return HashMap<String, String>(1).also {
-                    it[REQUESTS_AUTHORIZATION_HEADER] = REQUESTS_TOKEN_PREFIX + token.value
-                }
+                return getDefaultHeaders()
             }
         }.also {
             it.tag = this

@@ -14,6 +14,8 @@ internal const val REQUESTS_DATA_KEY = "data"
 internal const val REQUESTS_PRETTY_NAME_KEY = "pretty_name"
 internal const val REQUESTS_IMAGE_URL_KEY = "image_url"
 internal const val REQUESTS_AUTHORIZATION_HEADER = "Authorization"
+internal const val REQUESTS_CONTENT_TYPE_HEADER = "Content-Type"
+internal const val REQUESTS_CONTENT_TYPE_JSON = "application/json"
 internal const val REQUESTS_TOKEN_PREFIX = "token "
 
 fun showToast(context: Context, message: String, duration: Int) {
