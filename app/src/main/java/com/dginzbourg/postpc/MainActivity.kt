@@ -37,22 +37,30 @@ class MainActivity : AppCompatActivity() {
         token.observe(this, Observer { fetchUserInfo() })
     }
 
+    private fun addRequest(request: JsonObjectRequest) {
+        if (!::requestQueue.isInitialized)
+            requestQueue = Volley.newRequestQueue(application)
+        requestQueue.add(request)
+    }
+
     private fun fetchToken() {
-        requestQueue = Volley.newRequestQueue(application)
         showToast(this, getString(R.string.loading), Toast.LENGTH_LONG)
-        val stringRequest = JsonObjectRequest(
+        val request = JsonObjectRequest(
             "$SERVER_BASE_URL$SERVER_USERS_URL$username/$SERVER_TOKEN_URL",
             null,
             Response.Listener<JSONObject> {
                 token.postValue(it[REQUESTS_DATA_KEY] as String)
             },
-            Response.ErrorListener {
-                showToast(this, getString(R.string.something_went_wrong), Toast.LENGTH_LONG)
-            }).also {
+            Response.ErrorListener { responseError() }
+        ).also {
             it.tag = this
         }
 
-        requestQueue.add(stringRequest)
+        addRequest(request)
+    }
+
+    private fun responseError() {
+        showToast(this, getString(R.string.something_went_wrong), Toast.LENGTH_LONG)
     }
 
     private fun fetchUserInfo() {
