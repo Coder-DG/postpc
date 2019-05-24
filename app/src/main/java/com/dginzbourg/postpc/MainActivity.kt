@@ -6,6 +6,7 @@ import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
+import android.util.Log
 import android.widget.*
 import com.android.volley.RequestQueue
 import com.android.volley.Response
@@ -28,6 +29,7 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var errorListener: Response.ErrorListener
     private var updateUIFromDataListener = Response.Listener<JSONObject> {
+        Log.d("userinfo", "Got data $it")
         if (!it.has(REQUESTS_DATA_KEY)) {
             showErrorToast()
             return@Listener
