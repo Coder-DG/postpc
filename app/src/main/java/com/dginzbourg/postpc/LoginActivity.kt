@@ -129,8 +129,6 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun checkConnection() {
-        // Instantiate the RequestQueue.
-// Request a string response from the provided URL.
         val stringRequest = JsonObjectRequest(
             SERVER_BASE_URL,
             null,
@@ -143,7 +141,6 @@ class LoginActivity : AppCompatActivity() {
             it.tag = this
         }
 
-// Add the request to the RequestQueue.
         requestQueue.add(stringRequest)
     }
 
