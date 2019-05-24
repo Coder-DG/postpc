@@ -136,7 +136,7 @@ class LoginActivity : AppCompatActivity() {
             SERVER_BASE_URL,
             null,
             Response.Listener<JSONObject> {
-                isConnected.postValue(true)
+                isConnected.postValue(it.has(REQUESTS_DATA_KEY))
             },
             Response.ErrorListener {
                 isConnected.postValue(false)
