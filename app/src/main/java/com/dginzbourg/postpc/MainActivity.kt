@@ -129,7 +129,10 @@ class MainActivity : AppCompatActivity() {
             }
         })
         picURL.observe(this, Observer {
-            Glide.with(this).load(SERVER_BASE_URL + picURL.value).into(profilePic)
+            Glide.with(this)
+                .load(SERVER_BASE_URL + picURL.value)
+                .override(500, 500)
+                .into(profilePic)
         })
         prettyName.observe(this, Observer { prettyNameEditText.setText(prettyName.value) })
     }
