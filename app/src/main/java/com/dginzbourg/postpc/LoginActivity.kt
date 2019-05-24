@@ -115,7 +115,6 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun checkIfInitialized() {
-        // TODO(Make sure to hide all elements until connection is established and usernameString has been set)
         executor.execute {
             with(getSharedPreferences(SHARED_PREFERENCES_FILE, Context.MODE_PRIVATE)) {
                 val username = getString(DB_USERNAME_KEY, null)
