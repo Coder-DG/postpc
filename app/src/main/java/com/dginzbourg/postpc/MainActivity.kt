@@ -39,7 +39,6 @@ class MainActivity : AppCompatActivity() {
         }
         initUIElements()
         if (!restoreUITexts(savedInstanceState)) {
-            usernameTextView.text = intent.getStringExtra(DB_USERNAME_KEY)
             val text = prettyNameEditText.text.toString()
             updatePrettyNameButton.isEnabled = text.isNotBlank() && prettyName.value != text
         }
@@ -133,6 +132,8 @@ class MainActivity : AppCompatActivity() {
                 if (prettyNameEditText.text.isNotEmpty()) {
                     prettyName.postValue(data[REQUESTS_PRETTY_NAME_KEY] as String)
                 }
+                val tmp = "Welcome back, ${intent.getStringExtra(DB_USERNAME_KEY)}!"
+                usernameTextView.text = tmp
             },
             errorListener
         ) {
