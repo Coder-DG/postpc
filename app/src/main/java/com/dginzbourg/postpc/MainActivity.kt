@@ -32,6 +32,7 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        username = intent.getStringExtra(DB_USERNAME_KEY)
         errorListener = Response.ErrorListener {
             showErrorToast()
         }
