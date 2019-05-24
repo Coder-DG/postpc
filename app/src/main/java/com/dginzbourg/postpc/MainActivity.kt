@@ -2,8 +2,10 @@ package com.dginzbourg.postpc
 
 import android.arch.lifecycle.MutableLiveData
 import android.arch.lifecycle.Observer
+import android.content.Context
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
+import android.support.v7.app.AlertDialog
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
@@ -61,25 +63,28 @@ class MainActivity : AppCompatActivity() {
             val text = prettyNameEditText.text.toString()
             updatePrettyNameButton.isEnabled = text.isNotBlank() && prettyName.value != text
         }
-        setupOnClick()
+        setupOnClicks()
         setupListeners()
         if (token.value == null || token.value?.isEmpty() == true) {
             fetchToken()
         }
     }
 
-    private fun setupOnClick() {
+    private fun setupOnClicks() {
         updatePrettyNameButton.setOnClickListener {
-            updatePrettyName(prettyNameEditText.text.toString())
+            val jsonRequestBody = HashMap<String, String>(1)
+            jsonRequestBody[REQUESTS_PRETTY_NAME_KEY] = prettyNameEditText.text.toString()
+            updateInfo(JSONObject(jsonRequestBody))
+        }
+        profilePic.setOnClickListener {
+            showPicSelectorDialog()
         }
     }
 
-    private fun updatePrettyName(name: String) {
-        val jsonRequestBody = HashMap<String, String>(1)
-        jsonRequestBody[REQUESTS_PRETTY_NAME_KEY] = name
+    private fun updateInfo(jsonObject: JSONObject) {
         val request = object : JsonObjectRequest(
             "$SERVER_BASE_URL$SERVER_USER_URL$SERVER_EDIT_URL",
-            JSONObject(jsonRequestBody),
+            jsonObject,
             updateUIFromDataListener,
             errorListener
         ) {
@@ -226,7 +231,29 @@ class MainActivity : AppCompatActivity() {
         executor.shutdown()
     }
 
+    private fun showPicSelectorDialog() {
+        AlertDialog.Builder(this)
+            .setTitle("Choose your favorite picture")
+            .setItems(
+                arrayOf<CharSequence>(*PIC_OPTIONS)
+            ) { _, which ->
+                val jsonRequestBody = HashMap<String, String>(1)
+                jsonRequestBody[REQUESTS_IMAGE_URL_KEY] = PIC_OPTIONS[which]
+                updateInfo(JSONObject(jsonRequestBody))
+            }
+            .create()
+            .show()
+    }
+
     companion object {
+        private val PIC_OPTIONS = arrayOf(
+            "/images/crab.png",
+            "/images/unicorn.png",
+            "/images/alien.png",
+            "/images/robot.png",
+            "/images/octopus.png",
+            "/images/frog.png"
+        )
         const val USERNAME = "username"
         const val PRETTY_NAME = "pretty_name"
         const val PIC_URL = "pic_url"
